@@ -2647,21 +2647,22 @@ end
 
 
 function SuperSurvivor:Attack(victim)
-	self:Speak("Attacking in "..tostring(self.AtkTicks))
-	-- AtkTicks is the handler that will keep NPC's from spamming attacks. 
-	if (self.AtkTicks >= 0) then
+	
+	self:Speak("Attacking in "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
+
+	-- AtkTicks will start counting down to 0 ONLY if not already attacking, if not 0, or not has fallen on the ground
+	if (self.AtkTicks >= 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) then
 		self.AtkTicks = self.AtkTicks - 1
 	end
 
-	if(self.player:getCurrentState() == SwipeStatePlayer.instance()) and (self.AtkTicks <= 3) then
+	if(self.player:getCurrentState() == SwipeStatePlayer.instance()) then
 		self.AtkTicks = 3 -- This will MAKE SURE there's a cooldown between attacks
 	return false end 	  -- already attacking wait
 	
-	if(self.player:getModData().felldown) and (self.AtkTicks <= 6) then  -- This will add timer when fallen
-		self.AtkTicks = 6 -- This will ensure cooldown reset when fallen
-	end 
-	if(self.player:getModData().felldown) then return false end -- This will stop general attacking when fallen
-	
+	if(self.player:getModData().felldown) then  -- This will add timer when fallen
+		self.AtkTicks = 6  	-- This number is because recovering from literally falling down
+	return false end  		-- Forces the function to quit and start over because fell down
+
 	if(self.AtkTicks >= 0) then return false end  -- Don't want to attack prior to 0 timer
 
 	if not (instanceof(victim,"IsoPlayer") or instanceof(victim,"IsoZombie")) then return false end
@@ -2677,8 +2678,9 @@ function SuperSurvivor:Attack(victim)
 		
 		if(self.UsingFullAuto) then self.TriggerHeldDown = true end
 		if(self.player ~= nil) then 
-			local distance = getDistanceBetween(self.player,victim)
+			local distance = getDistanceBetween(self.player,victim) / 2 -- divides by a 4th range
 			local minrange = self:getMinWeaponRange() + 0.1
+--			local minrange = self:getMinWeaponRange() + 0.1
 			--print("distance was ".. tostring(distance))
 			local weapon = self.player:getPrimaryHandItem();
 			
@@ -2690,26 +2692,26 @@ function SuperSurvivor:Attack(victim)
 			self.player:NPCSetAttack(true)
 
 			-- Should prevent spam attacks when not in direct range
-			if (distance > minrange) and (self.AtkTicks <= 3) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) then 
-				self.AtkTicks = 3
-			return false end
+--			if (distance > minrange) and (self.AtkTicks <= 3) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) then 
+--				self.AtkTicks = 3
+--			return false end
 
 
 			
 -- Removed the 'shove' machanic, because it's possible for the npc to just spam this move no matter what.as
-			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks < 0)  then
+--			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks < 0)  then
+			if(distance < minrange) and (self.AtkTicks < 0)  then
 				--self:Speak("Shove!"..tostring(distance).."/"..tostring(minrange))
 --				victim:Hit(weapon, self.player, damage, true, 1.0, false)
-				--	self.AtkTicks = 4
 --			else
 --				if (self.AtkTicks < 0) then
 				--self:Speak("Attack!"..tostring(distance).."/"..tostring(minrange))
 					victim:Hit(weapon, self.player, damage, false, 1.0, false)
-				--	self.AtkTicks = 4 -- Need this here to fix distance attack buff 
 --				end
 			end
 			
 		end
+			self:WalkToUpdate(self.player)
 	else
 		local pwep = self.player:getPrimaryHandItem()
 		local pwepContainer = pwep:getContainer()
