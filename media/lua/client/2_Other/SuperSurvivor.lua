@@ -17,6 +17,7 @@ function SuperSurvivor:new(isFemale,square)
 	o.GroupBraveryBonus = 0
 	o.GroupBraveryUpdatedTicks = 0
 	o.WaitTicks = 0
+	o.AtkTicks = 0
 	o.TriggerHeldDown = false
 	o.player = o:spawnPlayer(square, isFemale)
 	o.userName = TextDrawObject.new()
@@ -139,6 +140,7 @@ function SuperSurvivor:newLoad(ID,square)
 	o.DebugMode = false
 	o.NumberOfBuildingsLooted = 0
 	o.WaitTicks = 0
+	o.AtkTicks = 0
 	o.TriggerHeldDown = false
 	o.player = o:loadPlayer(square,ID)
 	o.userName = TextDrawObject.new()
@@ -225,6 +227,7 @@ function SuperSurvivor:newSet(player)
 	o.PathingCounter = 0
 	o.player = player
 	o.WaitTicks = 0
+	o.AtkTicks = 0
 	o.LastSurvivorSeen = nil
 	o.LastMemberSeen = nil
 	o.TicksAtLastDetectNoFood = 0
@@ -2638,10 +2641,26 @@ function SuperSurvivor:getMinWeaponRange()
 	return out
 end
 
+
+-- The location of npc's attacking
+-- Brings back  SwipeStatePlayer from un-commented
+
+
 function SuperSurvivor:Attack(victim)
-	--if(self.player:getCurrentState() == SwipeStatePlayer.instance()) then return false end -- already attacking wait
+	self:Speak("Attacking in "..tostring(self.AtkTicks))
+	-- AtkTicks is the handler that will keep NPC's from spamming attacks. 
+	if (self.AtkTicks >= 0) then
+		self.AtkTicks = self.AtkTicks - 1
+	end
+
+	if(self.player:getCurrentState() == SwipeStatePlayer.instance()) then
+		self.AtkTicks = 4 -- This will MAKE SURE there's a cooldown between attacks
+	return false end -- already attacking wait
+	
 	if(self.player:getModData().felldown) then return false end -- cant attack if stunned by an attack
 	
+	if(self.AtkTicks > 0) then return false end  -- Don't want to attack prior to 0 timer
+
 	if not (instanceof(victim,"IsoPlayer") or instanceof(victim,"IsoZombie")) then return false end
 	if(self:WeaponReady()) then
 		if(instanceof(victim,"IsoPlayer") and IsoPlayer.getCoopPVP() == false) then
@@ -2667,12 +2686,16 @@ function SuperSurvivor:Attack(victim)
 			self.player:NPCSetAiming(true)
 			self.player:NPCSetAttack(true)
 
-			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) then
+			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks <= 0)  then
 				--self:Speak("Shove!"..tostring(distance).."/"..tostring(minrange))
 				victim:Hit(weapon, self.player, damage, true, 1.0, false)
+					self.AtkTicks = 3
 			else
+				if (self.AtkTicks <= 0) then
 				--self:Speak("Attack!"..tostring(distance).."/"..tostring(minrange))
-				victim:Hit(weapon, self.player, damage, false, 1.0, false)
+					victim:Hit(weapon, self.player, damage, false, 1.0, false)
+					self.AtkTicks = 4 -- Need this here to fix distance attack buff 
+				end
 			end
 			
 		end
