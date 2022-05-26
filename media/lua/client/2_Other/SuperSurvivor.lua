@@ -2653,13 +2653,16 @@ function SuperSurvivor:Attack(victim)
 		self.AtkTicks = self.AtkTicks - 1
 	end
 
-	if(self.player:getCurrentState() == SwipeStatePlayer.instance()) then
-		self.AtkTicks = 4 -- This will MAKE SURE there's a cooldown between attacks
-	return false end -- already attacking wait
+	if(self.player:getCurrentState() == SwipeStatePlayer.instance()) and (self.AtkTicks <= 3) then
+		self.AtkTicks = 3 -- This will MAKE SURE there's a cooldown between attacks
+	return false end 	  -- already attacking wait
 	
-	if(self.player:getModData().felldown) then return false end -- cant attack if stunned by an attack
+	if(self.player:getModData().felldown) and (self.AtkTicks <= 6) then  -- This will add timer when fallen
+		self.AtkTicks = 6 -- This will ensure cooldown reset when fallen
+	end 
+	if(self.player:getModData().felldown) then return false end -- This will stop general attacking when fallen
 	
-	if(self.AtkTicks > 0) then return false end  -- Don't want to attack prior to 0 timer
+	if(self.AtkTicks >= 0) then return false end  -- Don't want to attack prior to 0 timer
 
 	if not (instanceof(victim,"IsoPlayer") or instanceof(victim,"IsoZombie")) then return false end
 	if(self:WeaponReady()) then
@@ -2686,16 +2689,24 @@ function SuperSurvivor:Attack(victim)
 			self.player:NPCSetAiming(true)
 			self.player:NPCSetAttack(true)
 
-			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks <= 0)  then
+			-- Should prevent spam attacks when not in direct range
+			if (distance > minrange) and (self.AtkTicks <= 3) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) then 
+				self.AtkTicks = 3
+			return false end
+
+
+			
+-- Removed the 'shove' machanic, because it's possible for the npc to just spam this move no matter what.as
+			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks < 0)  then
 				--self:Speak("Shove!"..tostring(distance).."/"..tostring(minrange))
-				victim:Hit(weapon, self.player, damage, true, 1.0, false)
-					self.AtkTicks = 3
-			else
-				if (self.AtkTicks <= 0) then
+--				victim:Hit(weapon, self.player, damage, true, 1.0, false)
+				--	self.AtkTicks = 4
+--			else
+--				if (self.AtkTicks < 0) then
 				--self:Speak("Attack!"..tostring(distance).."/"..tostring(minrange))
 					victim:Hit(weapon, self.player, damage, false, 1.0, false)
-					self.AtkTicks = 4 -- Need this here to fix distance attack buff 
-				end
+				--	self.AtkTicks = 4 -- Need this here to fix distance attack buff 
+--				end
 			end
 			
 		end
