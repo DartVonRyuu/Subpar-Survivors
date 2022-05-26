@@ -2658,37 +2658,21 @@ function SuperSurvivor:Attack(victim)
 			local distance = getDistanceBetween(self.player,victim)
 			local minrange = self:getMinWeaponRange() + 0.1
 			--print("distance was ".. tostring(distance))
+			local weapon = self.player:getPrimaryHandItem();
+			
+			local damage = 0
+			if (weapon ~= nil) then
+				damage = weapon:getMaxDamage();
+			end
+			self.player:NPCSetAiming(true)
+			self.player:NPCSetAttack(true)
+
 			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) then
 				--self:Speak("Shove!"..tostring(distance).."/"..tostring(minrange))
-				self.player:setForceShove(true);
-				self.player:setVariable("bShoveAiming", true);
-				--self.player:setVariable("bDoShove", true);
-				--self.player:setVariable("meleePressed", true);
-				self.player:pressedAttack();
-				self.player:NPCSetAttack(true);
-				self.player:NPCSetMelee(true);  
-				self.player:AttemptAttack(10.0);
-				--self.player:DoAttack(0);
-				if IsDamageBroken then
-					victim:Hit(nil, self.player, 0, true, 0, false);
-				end
+				victim:Hit(weapon, self.player, damage, true, 1.0, false)
 			else
 				--self:Speak("Attack!"..tostring(distance).."/"..tostring(minrange))
-				self.player:NPCSetAttack(true);
-				self.player:NPCSetMelee(false);
-				--self.player:DoAttack(0);
-				local gameVersion = getCore():getGameVersion()
-				if IsDamageBroken then
-					local weapon = self.player:getPrimaryHandItem();
-					local damage = 0
-					if (weapon ~= nil) then
-						--damage = ZombRand(weapon:getMinDamage(), weapon:getMaxDamage());
-						damage = weapon:getMaxDamage();
-					end
-					local shoveMaybe = false;
-					local multiplier = 1.0; -- i dont know what this is
-					victim:Hit(weapon, self.player, damage, shoveMaybe, multiplier, false);
-				end
+				victim:Hit(weapon, self.player, damage, false, 1.0, false)
 			end
 			
 		end
@@ -3102,6 +3086,12 @@ function SuperSurvivor:SuitUp(SuitName)
 			self:WearThis("Base.Shirt_Workman");					
 			self:WearThis("Base.Trousers_DefaultTEXTURE");					
 			self:WearThis("Base.Shoes_BlackBoots");
+		elseif(SuitName == "Inmate") then
+			self:WearThis("Base.Boilersuit_Prisoner");
+			self:WearThis("Base.Shoes_Slippers");					
+			self:WearThis("Base.Socks_Ankle");					
+			self:WearThis("Base.Tshirt_DefaultTEXTURE");
+			self:WearThis("Base.Belt2");
 		else -- random basic clothes
 			
 			getRandomSurvivorSuit(self)

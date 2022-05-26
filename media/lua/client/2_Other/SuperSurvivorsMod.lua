@@ -3,7 +3,23 @@ EnabledTranslations["EN"] = true
 EnabledTranslations["JP"] = true
 
 --weapon tables:
-MeleWeapons = {"farming.Shovel","farming.Shovel","Base.Hammer","Base.Hammer","Base.Axe","Base.BaseballBat","Base.BaseballBat","Base.Screwdriver","Base.Plank","Base.Plank","Base.PlankNail","Base.PlankNail","Base.Crowbar","Base.Crowbar","Base.Golfclub","Base.Golfclub","Base.Golfclub","Base.Pan","Base.Pan","Base.Pan","Base.HuntingKnife", "Base.Hammer","Base.Hammer","Base.Axe","Base.BaseballBat","Base.BaseballBat","Base.Screwdriver","Base.Plank","Base.Plank","Base.PlankNail","Base.PlankNail","Base.Crowbar","Base.Crowbar","Base.Golfclub","Base.Golfclub","Base.Golfclub","Base.Pan","Base.Pan","Base.Pan","Base.HuntingKnife", "Base.RollingPin","Base.GardenHoe","Base.GardenHoe","Base.GridlePan","Base.HandAxe","Base.HandScythe","Base.Machete","Base.MetalBar","Base.PipeWrench"}; -- RollingPin acts as a torch, setting target on fire
+MeleWeapons = {
+"Base.Hammer","Base.Sledgehammer","Base.BallPeenHammer","Base.WoodenMallet","Base.Wrench","Base.PipeWrench",
+"Base.Shovel","Base.Shovel2","Base.SnowShovel","Base.Rake","Base.LeafRake","Base.Plunger","Base.ClosedUmbrellaRed",
+"Base.Plank","Base.Plank","Base.Plank","Base.Plank","Base.PlankNail","Base.PlankNail","Base.PlankNail","Base.MetalPipe","Base.MetalBar",
+"Base.Crowbar","Base.Crowbar","Base.Crowbar","Base.Crowbar","Base.Crowbar",
+"Base.BaseballBat","Base.BaseballBat","Base.BaseballBat","Base.BaseballBatNails",
+"Base.Golfclub","Base.TennisRacket","Base.BadmintonRacket","Base.Poolcue","Base.HockeyStick","Base.LaCrosseStick","Base.IcePick",
+"Base.Pan","Base.Saucepan","Base.GridlePan","Base.RollingPin",
+"Base.GuitarAcoustic","Base.GuitarElectricBlack","Base.GuitarElectricBassBlue","Base.Flute","Base.FishingRod",
+
+"Base.GardenFork","Base.WoodenLance",
+"Base.SpearCrafted","Base.SpearCrafted","Base.SpearKnife","Base.SpearScissors","Base.SpearScrewdriver","Base.SpearHuntingKnife",
+
+"Base.Axe","Base.HandAxe","Base.WoodAxe","Base.Pickaxe","Base.AxeStone","Base.HandScythe",
+"Base.Spoon","Base.Fork","Base.Screwdriver","Base.Scalpel","Base.Stake",
+"Base.KitchenKnife","Base.HuntingKnife","Base.Machete","Base.Katana"
+}; -- RollingPin acts as a torch, setting target on fire
 
 if(isModEnabled("ChainSaw")) then
 table.insert(MeleWeapons,"ChainSaw.ChainSaw");

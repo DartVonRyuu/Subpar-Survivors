@@ -190,7 +190,7 @@ function AttemptEntryIntoBuildingTask:update()
 					if(debugOutput) then print( self.parent:getName() .. " " .."walking to door") end
 				else
 					
-					if(self.BreakInAttempts > 80) then
+					if(self.BreakInAttempts > 10) then
 						if(debugOutput) then print( self.parent:getName() .. " " .."here i am23") end
 						self:giveUpOnBuilding()
 						print("gave up on building because: could not seem to break down door")

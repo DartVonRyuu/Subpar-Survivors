@@ -36,14 +36,14 @@ end
 
 function SurvivorInfoWindow:createChildren()
 
-
-	self.HomeWindow = ISRichTextPanel:new(0, 16, 375, 615);
+	local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
+	self.HomeWindow = ISRichTextPanel:new(0, FONT_HGT_SMALL + 1, FONT_HGT_SMALL * 6 + 200, FONT_HGT_SMALL * 10 + 500);
 	self.HomeWindow:initialise();
 	self.HomeWindow.autosetheight = false
 	self.HomeWindow:ignoreHeightChange()
 	self:addChild(self.HomeWindow)
 	
-	self.MyCallButton = ISButton:new(275, 25, 60, 25, getText("ContextMenu_SD_CallOver"), self, CallButtonPressed);		
+	self.MyCallButton = ISButton:new(FONT_HGT_SMALL * 7 + 30, FONT_HGT_SMALL + 13, 60, 25, getText("ContextMenu_SD_CallOver"), self, CallButtonPressed);		
 	
 	self.MyCallButton:setEnable(true);
 	self.MyCallButton:initialise();
@@ -91,11 +91,11 @@ function SurvivorInfoWindow:Load(ASuperSurvivor)
 	newText = newText .. getText("Tooltip_food_Thirst")..": " .. tostring(math.floor((player:getStats():getThirst()*100)))  .. "\n"
 	newText = newText .. "Morale: " .. tostring(math.floor(player:getStats():getMorale()*100))  .. "\n"
 	newText = newText .. "Sanity: " .. tostring(math.floor(player:getStats():getSanity()*100))  .. "\n"
-	newText = newText .. "Boredom: " .. tostring(math.floor(player:getStats():getBoredom()*100))  .. "\n"
+	newText = newText .. getText("Tooltip_food_Boredom")..": " .. tostring(math.floor(player:getStats():getBoredom()*100))  .. "\n"
 	newText = newText .. "IdleBoredom: " .. tostring(math.floor(player:getStats():getIdleboredom()*100))  .. "\n"
-	newText = newText .. "Unhappiness: " .. tostring(math.floor(player:getBodyDamage():getUnhappynessLevel()*100))  .. "\n"
-	newText = newText .. "Wetness: " .. tostring(math.floor(player:getBodyDamage():getWetness()*100))  .. "\n"
-	newText = newText .. "Filth: " .. tostring(math.floor(ASuperSurvivor:getFilth()*100))  .. "\n"
+	newText = newText .. getText("Tooltip_food_Unhappiness")..": " .. tostring(math.floor(player:getBodyDamage():getUnhappynessLevel()*100))  .. "\n"
+	newText = newText .. getText("Tooltip_Wetness")..": " .. tostring(math.floor(player:getBodyDamage():getWetness()*100))  .. "\n"
+	newText = newText .. getText("Tooltip_clothing_dirty")..": " .. tostring(math.floor(ASuperSurvivor:getFilth()*100))  .. "\n"
 	
 
 	newText = newText .. "\n"
@@ -145,7 +145,8 @@ function SurvivorInfoWindow:Load(ASuperSurvivor)
 end
 
 function SurvivorInfoWindowCreate()
-	mySurvivorInfoWindow = SurvivorInfoWindow:new(270, 270, 350, 615)
+	local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
+	mySurvivorInfoWindow = SurvivorInfoWindow:new(300, 270, FONT_HGT_SMALL * 6 + 175, FONT_HGT_SMALL * 10 + 500)
 	mySurvivorInfoWindow:addToUIManager();
 	mySurvivorInfoWindow:setVisible(false);
 	mySurvivorInfoWindow.pin = true;

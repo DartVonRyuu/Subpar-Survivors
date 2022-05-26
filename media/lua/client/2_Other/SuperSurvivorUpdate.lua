@@ -408,15 +408,15 @@ function SuperSurvivorPVPHandle(wielder, victim, weapon, damage)
 			local bodypart = bodydamage:getBodyPart(BodyPartType.FromIndex(bindex));
 			if (ZombRand(0,100) < victim:getBodyPartClothingDefense(bindex, b3, b4)) then
 				b = false;
-				victim:addHoleFromZombieAttacks(BloodBodyPartType.FromIndex(bindex));
+				--victim:addHoleFromZombieAttacks(BloodBodyPartType.FromIndex(bindex));
 			end
 			if b == false then
 				return;
 			end
 			victim:addHole(BloodBodyPartType.FromIndex(bindex));
-			victim:splatBloodFloorBig(0.4);
-			victim:splatBloodFloorBig(0.4);
-			victim:splatBloodFloorBig(0.4);
+			--victim:splatBloodFloorBig(0.4);
+			--victim:splatBloodFloorBig(0.4);
+			--victim:splatBloodFloorBig(0.4);
 			if (b3) then
 				if (ZombRand(0,6) == 6) then
 					bodypart:generateDeepWound();

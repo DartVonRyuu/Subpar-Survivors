@@ -186,10 +186,10 @@ function SuperSurvivorGroup:setLeader(newLeader)
 
 	if self.Leader ~= -1 then
 		local SS = SSM:Get(self.Leader)
-		if(SS) then SS:setGroupRole("Worker") end -- old leader gets demoted to worker if exists
+		if(SS) then SS:setGroupRole(getText("ContextMenu_Job_Worker")) end -- old leader gets demoted to worker if exists
 	end
 	self.Leader = newLeader
-	SSM:Get(self.Leader):setGroupRole("Leader")
+	SSM:Get(self.Leader):setGroupRole(getText("ContextMenu_Job_Leader"))
 	
 end
 function SuperSurvivorGroup:getLeader()
@@ -198,7 +198,7 @@ end
 function SuperSurvivorGroup:hasLeader()
 	if self.Leader ~= -1 then
 		local SS = SSM:Get(self.Leader)
-		if(SS) and SS:getGroupRole() == "Leader" then return true end
+		if(SS) and SS:getGroupRole() == getText("ContextMenu_Job_Leader") then return true end
 	end
 	return false
 end
@@ -363,7 +363,7 @@ function SuperSurvivorGroup:addMember(newSurvivor, Role)
 		newSurvivor:setGroupRole(Role)
 		newSurvivor:setGroupID(self.ID)
 		
-		if(Role == "Leader") then 			
+		if(Role == getText("ContextMenu_Job_Leader")) then 			
 			self:setLeader(newSurvivor:getID()) 
 		end
 		return self.Members[#self.Members]
@@ -437,7 +437,7 @@ end
 function SuperSurvivorGroup:Print()
 
 	print("GroupID: "..tostring(self.ID))
-	print("Leader: "..tostring(self.Leader))
+	print(getText("ContextMenu_Job_Leader")..": "..tostring(self.Leader))
 	print("MemberCount: "..tostring(#self.Members))
 	print("Members: ")
 	for i=1, #self.Members do

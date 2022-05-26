@@ -84,7 +84,7 @@ function GroupWindow:Update()
 	if (Group == nil) then
 		print("Fixing player has no group")
 		Group = SSGM:newGroup()
-		Group:addMember(SSM:Get(0),"Leader")		
+		Group:addMember(SSM:Get(0), getText("ContextMenu_Job_Leader"))		
 	end
 
 	if(Group) then
@@ -92,7 +92,7 @@ function GroupWindow:Update()
 
 		if not Group:isMember(SSM:Get(0)) then
 			print("Fixing player not in own group")
-			Group:addMember(SSM:Get(0),"Leader")
+			Group:addMember(SSM:Get(0), getText("ContextMenu_Job_Leader"))
 		elseif not Group:hasLeader() then
 			print("Fixing no group leader")
 			Group:setLeader(0)
@@ -168,22 +168,24 @@ end
 
 function GroupWindow:createChildren()
 
+	local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 	ISCollapsableWindow.createChildren(self);
-	self.Header = ISRichTextPanel:new(0, 13, 250, 50);
+	self.Header = ISRichTextPanel:new(0, FONT_HGT_SMALL + 1, 300, 50);
 	self.Header:initialise();
 	self.Header.autosetheight = false
 	self.Header:ignoreHeightChange()	
 	self:addChild(self.Header)
 	
-	self.HomeWindow = ISScrollingListBox:new(0, 40, 250, 420);
+	self.HomeWindow = ISScrollingListBox:new(0, FONT_HGT_SMALL * 2 + 15, 300, 570);
 	self.HomeWindow.onmousedblclick = SSItemClickHandle;
-	self.HomeWindow.itemheight = 30
+	self.HomeWindow.itemheight = FONT_HGT_SMALL + 15
 	self.HomeWindow:initialise();
 	self:addChild(self.HomeWindow)
 end
 
 function GroupWindowCreate()
-	myGroupWindow = GroupWindow:new(15, 285, 250, 470)
+	local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
+	myGroupWindow = GroupWindow:new(15, 285, 300, 620 + FONT_HGT_SMALL)
 	myGroupWindow:addToUIManager();
 	myGroupWindow:setVisible(false);
 	myGroupWindow.pin = true;

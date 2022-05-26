@@ -13,16 +13,24 @@ function SuperSurvivorGetOptionValue(option)
 	print("num:"..tostring(num))
 	if(option == "WifeSpawn") then return (num ~= 1)
 	elseif(option == "LockNLoad") then return (num ~= 1)
-	elseif(option == "SpawnRate") and (num == 8) then return 0
-	elseif(option == "SpawnRate") and (num == 7) then return 400
-	elseif(option == "SpawnRate") and (num == 6) then return 1000
-	elseif(option == "SpawnRate") and (num == 5) then return 2500
-	elseif(option == "SpawnRate") and (num == 4) then return 4000
-	elseif(option == "SpawnRate") and (num == 3) then return 8000
-	elseif(option == "SpawnRate") and (num == 2) then return 16000
-	elseif(option == "SpawnRate") and (num == 1) then return 32000
+	elseif(option == "SpawnRate") and (num == 1) then return 0
+	elseif(option == "SpawnRate") and (num == 2) then return 64000
+	elseif(option == "SpawnRate") and (num == 3) then return 32000
+	elseif(option == "SpawnRate") and (num == 4) then return 26000
+	elseif(option == "SpawnRate") and (num == 5) then return 20000
+	elseif(option == "SpawnRate") and (num == 6) then return 16000
+	elseif(option == "SpawnRate") and (num == 7) then return 12000
+	elseif(option == "SpawnRate") and (num == 8) then return 8000
+	elseif(option == "SpawnRate") and (num == 9) then return 4000
+	elseif(option == "SpawnRate") and (num == 10) then return 2500
+	elseif(option == "SpawnRate") and (num == 11) then return 1000
+	elseif(option == "SpawnRate") and (num == 12) then return 400
 	
-	elseif(option == "GunSpawnRate") then return (num * 5) - 5
+	elseif(option == "GunSpawnRate") and (num == 1) then return 0
+	elseif(option == "GunSpawnRate") and (num == 2) then return 1
+	elseif(option == "GunSpawnRate") and (num == 3) then return 2
+	elseif(option == "GunSpawnRate") then return (num * 5) - 15
+	
 	elseif(option == "WepSpawnRate") then return (num * 5) - 5
 	elseif(option == "HostileSpawnRate") then return (num * 5) - 5
 	elseif(option == "MaxHostileSpawnRate") then return (num * 5) - 5
@@ -59,8 +67,8 @@ function SuperSurvivorSetOption(option,ToValue)
 end
 
  function SaveSurvivorOptions()
-	local destFile = "SurvivorOptions.lua"
-	local writeFile = getModFileWriter("SubparSurvivors", destFile, true, false)
+	--local destFile = "SurvivorOptions.lua"
+	local writeFile = getFileWriter("SurvivorOptions.lua", true, false)
 
 	for index,value in pairs(SuperSurvivorOptions) do
 	
@@ -78,7 +86,7 @@ function LoadSurvivorOptions( )
 	end
 
 	local fileTable = {}
-	local readFile = getModFileReader("SubparSurvivors","SurvivorOptions.lua", true)
+	local readFile = getFileReader("SurvivorOptions.lua", false)
 	local scanLine = readFile:readLine()
 	while scanLine do
 	
@@ -97,7 +105,7 @@ end
 
 function doesOptionsFileExist(  )
 	local fileTable = {}
-	local readFile = getModFileReader("SubparSurvivors","SurvivorOptions.lua", false)
+	local readFile = getFileReader("SurvivorOptions.lua", false)
 	
 	if(readFile) then return true
 	else return false end
@@ -106,11 +114,11 @@ end
 
 SuperSurvivorOptions = LoadSurvivorOptions()
 if(not SuperSurvivorOptions) then SuperSurvivorOptions = {} end
-if(not SuperSurvivorOptions["SpawnRate"]) then SuperSurvivorOptions["SpawnRate"] = 4 end
+if(not SuperSurvivorOptions["SpawnRate"]) then SuperSurvivorOptions["SpawnRate"] = 7 end
 if(not SuperSurvivorOptions["WifeSpawn"]) then SuperSurvivorOptions["WifeSpawn"] = 1 end
 if(not SuperSurvivorOptions["LockNLoad"]) then SuperSurvivorOptions["LockNLoad"] = 1 end
-if(not SuperSurvivorOptions["GunSpawnRate"]) then SuperSurvivorOptions["GunSpawnRate"] = 2 end
-if(not SuperSurvivorOptions["WepSpawnRate"]) then SuperSurvivorOptions["WepSpawnRate"] = 5 end
+if(not SuperSurvivorOptions["GunSpawnRate"]) then SuperSurvivorOptions["GunSpawnRate"] = 4 end
+if(not SuperSurvivorOptions["WepSpawnRate"]) then SuperSurvivorOptions["WepSpawnRate"] = 12 end
 if(not SuperSurvivorOptions["HostileSpawnRate"]) then SuperSurvivorOptions["HostileSpawnRate"] = 1 end
 if(not SuperSurvivorOptions["MaxHostileSpawnRate"]) then SuperSurvivorOptions["MaxHostileSpawnRate"] = 17 end
 if(not SuperSurvivorOptions["InfinitAmmo"]) then SuperSurvivorOptions["InfinitAmmo"] = 1 end
@@ -216,14 +224,14 @@ if index then
     table.insert(keyBinding, index+2, {value = "Call Closest Non-Group Member", key = 21})
     table.insert(keyBinding, index+3, {value = "Ask Closest Group Member to Follow", key = 34})
     table.insert(keyBinding, index+4, {value = "Toggle Group Window", key = 22})
-    table.insert(keyBinding, index+5, {value = "Spawn Wild Survivor", key = 53})
+    table.insert(keyBinding, index+5, {value = "Spawn Wild Survivor", key = 7})
     table.insert(keyBinding, index+6, {value = "Lower Follow Distance", key = 74})
     table.insert(keyBinding, index+7, {value = "Raise Follow Distance", key = 78})
    
-   table.insert(keyBinding, index+8, {value = "SSHotkey_1", key = 50})
-   table.insert(keyBinding, index+9, {value = "SSHotkey_2", key = 51})
-   table.insert(keyBinding, index+10, {value = "SSHotkey_3", key = 52})
-   table.insert(keyBinding, index+11, {value = "SSHotkey_4", key = 53})
+   table.insert(keyBinding, index+8, {value = "SSHotkey_1", key = 200})
+   table.insert(keyBinding, index+9, {value = "SSHotkey_2", key = 208})
+   table.insert(keyBinding, index+10, {value = "SSHotkey_3", key = 203})
+   table.insert(keyBinding, index+11, {value = "SSHotkey_4", key = 205})
     
     -- store the original MainOptions:create() method in a variable
     local oldCreate = MainOptions.create
@@ -298,7 +306,7 @@ if index then
 		----- Survivor options in Game Options -----
 		local spacing = 10
 	
-		self:addPage("SUPER SURVIVORS")
+		self:addPage(getText("ContextMenu_Title"))
 		self.addY = 0
 		
 		local label
@@ -307,7 +315,7 @@ if index then
 		local splitpoint = self:getWidth() / 3;
 	
 		
-		local options = {getText("ContextMenu_SD_ExtremelyLow"),getText("ContextMenu_SD_VeryLow"), getText("ContextMenu_SD_Low"),getText("ContextMenu_SD_Normal"), getText("ContextMenu_SD_High"),getText("ContextMenu_SD_VeryHigh"),getText("ContextMenu_SD_ExtremelyHigh"),getText("ContextMenu_SD_Off")}
+		local options = {getText("ContextMenu_SD_Off"),getText("ContextMenu_SD_UltraLow"),getText("ContextMenu_SD_ExtremelyLow"), getText("ContextMenu_SD_VeryLow"), getText("ContextMenu_SD_Low"), getText("ContextMenu_SD_SlightlyLower"), getText("ContextMenu_SD_Normal"), getText("ContextMenu_SD_SlightlyHigher"), getText("ContextMenu_SD_High"),getText("ContextMenu_SD_VeryHigh"),getText("ContextMenu_SD_ExtremelyHigh"),getText("ContextMenu_SD_UltraHigh")}
 		local spawnrateCombo = self:addCombo(splitpoint, y, comboWidth, 20,getText("ContextMenu_SOption_SurvivorSpawnRate"), options, 1)
 		spawnrateCombo:setToolTipMap({defaultTooltip = getText("ContextMenu_SOption_SurvivorSpawnRateDesc")});
 		
@@ -365,7 +373,7 @@ if index then
 		
 		
 		
-		local options = {"0%","5%","10%","15%","20%","25%","30%","35%","40%","45%","50%","55%","60%","65%","70%","75%","80%","85%","90%","95%","100%"}
+		local options = {"0%","1%","2%","5%","10%","15%","20%","25%","30%","35%","40%","45%","50%","55%","60%","65%","70%","75%","80%","85%","90%","95%","100%"}
 		local gunspawnrateCombo = self:addCombo(splitpoint, y, comboWidth, 20,getText("ContextMenu_SOption_ChancetoSpawnWithGun"), options, 1)
 		gunspawnrateCombo:setToolTipMap({defaultTooltip = getText("ContextMenu_SOption_ChancetoSpawnWithGunDesc")});
 		
@@ -817,8 +825,8 @@ if index then
 		
 		
 		local options = {getText("ContextMenu_SD_Off"),getText("ContextMenu_SD_On")}
-		local SafeBaseOptionsCombo = self:addCombo(splitpoint, y, comboWidth, 20,"Safe Base", options, 1)
-		SafeBaseOptionsCombo:setToolTipMap({defaultTooltip = "Wild Survivors will avoid your marked base"});
+		local SafeBaseOptionsCombo = self:addCombo(splitpoint, y, comboWidth, 20, getText("ContextMenu_SOption_SafeBase"), options, 1)
+		SafeBaseOptionsCombo:setToolTipMap({defaultTooltip = getText("ContextMenu_SOption_SafeBaseDesc")});
 		
 		gameOption = GameOption:new('SafeBase', SafeBaseOptionsCombo)
 		function gameOption.toUI(self)
@@ -845,8 +853,8 @@ if index then
 		
 		
 		local options = {getText("ContextMenu_SD_Off"),getText("ContextMenu_SD_On")}
-		local SurvivorBasesOptionsCombo = self:addCombo(splitpoint, y, comboWidth, 20,"Survivor Bases", options, 1)
-		SurvivorBasesOptionsCombo:setToolTipMap({defaultTooltip = "Wild Survivors will set up their own bases"});
+		local SurvivorBasesOptionsCombo = self:addCombo(splitpoint, y, comboWidth, 20, getText("ContextMenu_SOption_SurvivorBases"), options, 1)
+		SurvivorBasesOptionsCombo:setToolTipMap({defaultTooltip = getText("ContextMenu_SOption_SurvivorBasesDesc")});
 		
 		gameOption = GameOption:new('SurvivorBases', SurvivorBasesOptionsCombo)
 		function gameOption.toUI(self)
@@ -873,8 +881,8 @@ if index then
 		
 		
 		local options = {getText("ContextMenu_SD_Off"),getText("ContextMenu_SD_On")}
-		local DebugOptionsCombo = self:addCombo(splitpoint, y, comboWidth, 20,"Debug Options", options, 1)
-		DebugOptionsCombo:setToolTipMap({defaultTooltip = "Turns on debug right click survivor options"});
+		local DebugOptionsCombo = self:addCombo(splitpoint, y, comboWidth, 20, getText("ContextMenu_SOption_DebugOptions"), options, 1)
+		DebugOptionsCombo:setToolTipMap({defaultTooltip = getText("ContextMenu_SOption_DebugOptionsDesc")});
 		
 		gameOption = GameOption:new('DebugOptions', DebugOptionsCombo)
 		function gameOption.toUI(self)
