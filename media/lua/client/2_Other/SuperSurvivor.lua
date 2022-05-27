@@ -2680,15 +2680,16 @@ function SuperSurvivor:Attack(victim)
 	
 	self:Speak("Attacking in "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
 
+	-- Don't use a return False on this IF statement, that causes the if statements below get ignored 
 	-- AtkTicks will start counting down to 0 ONLY if not already attacking, if not 0, or not has fallen on the ground and also not being attacked by player
 	if (self.AtkTicks >= 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
 		self.AtkTicks = self.AtkTicks - 1
 			self.player:NPCSetAiming(false)
 			self.player:NPCSetAttack(false)
-	return false end 
+	end 
 	
 	-- Fixes a rare scenario where getting to loop attack
-	if (self.AtkTicks <= 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) then 
+	if (self.AtkTicks <= 0) and (self.player:getCurrentState() == SwipeStatePlayer.instance()) then 
 		self.AtkTicks = 3
 	return false end
 	
@@ -2701,7 +2702,7 @@ function SuperSurvivor:Attack(victim)
 	return false end 	  -- already attacking wait
 	
 	if(self.player:getModData().felldown) then  -- This will add timer when fallen
-		self.AtkTicks = 6  	-- This number is because recovering from literally falling down
+		self.AtkTicks = 3  	-- This number is because recovering from literally falling down
 	return false end  		-- Forces the function to quit and start over because fell down
 
 	if(self.AtkTicks >= 0) then return false end  -- Don't want to attack prior to 0 timer
