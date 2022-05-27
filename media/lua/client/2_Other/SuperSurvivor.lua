@@ -25,6 +25,7 @@ function SuperSurvivor:new(isFemale,square)
 	o.VisionTicks = 0
 	o.WaitTicks = 0
 	o.AtkTicks = 3
+	o.BraveryTicks = 10
 	o.TriggerHeldDown = false
 	o.player = o:spawnPlayer(square, isFemale)
 	o.userName = TextDrawObject.new()
@@ -149,6 +150,7 @@ function SuperSurvivor:newLoad(ID,square)
 	o.WaitTicks = 0
 	o.VisionTicks = 0
 	o.AtkTicks = 3
+	o.BraveryTicks = 10
 	o.TriggerHeldDown = false
 	o.player = o:loadPlayer(square,ID)
 	o.userName = TextDrawObject.new()
@@ -237,6 +239,7 @@ function SuperSurvivor:newSet(player)
 	o.WaitTicks = 0
 	o.VisionTicks = 0
 	o.AtkTicks = 3
+	o.BraveryTicks = 10
 	o.LastSurvivorSeen = nil
 	o.LastMemberSeen = nil
 	o.TicksAtLastDetectNoFood = 0
@@ -706,14 +709,26 @@ end
 function SuperSurvivor:getCurrentTask()
 	return self:getTaskManager():getCurrentTask()
 end
-function SuperSurvivor:isTooScaredToFight()
+function SuperSurvivor:isTooScaredToFight() -- editing .isHostile into the mix so hostiles aren't always cowards
 	
+	-- Adds a passive system to recovery bravery points
+	if (self.BraveryTicks > 0) then
+		self.BraveryTicks = self.BraveryTicks -1
+	end
+
+
+-- Make it where when hit, the npc gets a point of bravery back instead of this multiple injury thing	
 	if (self.EnemiesOnMe >= 3) then
 		return true
-	elseif (self.dangerSeenCount > 0 and (self:HasMultipleInjury() or not self:hasWeapon())) then 
+	elseif (self.player:getModData().isHostile ~= true) and (self.dangerSeenCount > 0 and (self:HasMultipleInjury() or not self:hasWeapon())) then 
 		return true
 	else
-		local base = 2
+		local base = 3
+			-- Creates a timer loop here to give a bravery 'base' point. Base needs to be higher than dangerseen
+			if (self.BraveryTicks <= 0) then
+				base = base + 1
+				self.BraveryTicks = 10
+			end
 		if(self:hasWeapon() and self:hasWeapon():getMaxDamage() > 0.1) then base = base + 1 end
 		if(self:usingGun()) then base = base + 2 end
 		base = base - self.EnemiesOnMe;
@@ -1326,7 +1341,7 @@ function SuperSurvivor:DoVision()
 	local closestNumber = nil
 	local tempdistance = 1
 	
-	
+	-- Updating this to fix npc dancing
 	if(spottedList ~= nil) then
 		--print("dovision " .. tostring(spottedList:size()))
 		for i=0, spottedList:size()-1 do
