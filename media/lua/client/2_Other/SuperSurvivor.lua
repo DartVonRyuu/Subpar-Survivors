@@ -2,7 +2,13 @@
 SuperSurvivor = {}
 SuperSurvivor.__index = SuperSurvivor
 
-SurvivorVisionCone = 0.90
+-- Testing Vision cone: Default was 0.90
+-- Need to see if 1.80 means 180 degrees or would 180 be?
+-- If this could be fixed, hiding behind NPC's directly would be fixed
+-- Though... One could say npcs are "magically able to see behind them" 
+-- But I think it would be better to have a easier fix of this rather than 
+-- Cheap shotting npcs that are stuck because the player just got behind them.
+SurvivorVisionCone = 1.80
 
 function SuperSurvivor:new(isFemale,square)
 	
@@ -16,6 +22,7 @@ function SuperSurvivor:new(isFemale,square)
 	o.UsingFullAuto = false
 	o.GroupBraveryBonus = 0
 	o.GroupBraveryUpdatedTicks = 0
+	o.VisionTicks = 0
 	o.WaitTicks = 0
 	o.AtkTicks = 0
 	o.TriggerHeldDown = false
@@ -140,6 +147,7 @@ function SuperSurvivor:newLoad(ID,square)
 	o.DebugMode = false
 	o.NumberOfBuildingsLooted = 0
 	o.WaitTicks = 0
+	o.VisionTicks = 0
 	o.AtkTicks = 0
 	o.TriggerHeldDown = false
 	o.player = o:loadPlayer(square,ID)
@@ -227,6 +235,7 @@ function SuperSurvivor:newSet(player)
 	o.PathingCounter = 0
 	o.player = player
 	o.WaitTicks = 0
+	o.VisionTicks = 0
 	o.AtkTicks = 0
 	o.LastSurvivorSeen = nil
 	o.LastMemberSeen = nil
@@ -1846,9 +1855,18 @@ function SuperSurvivor:update()
 		end
 	end
 		
-	self:NPCcalculateWalkSpeed()
+--	self:NPCcalculateWalkSpeed()
 	
-	self:DoVision()
+	if (self.VisionTicks < 0) then
+		self:NPCcalculateWalkSpeed()
+		self:DoVision()
+		self.VisionTicks = 1
+	end
+	if (self.VisionTicks >= 0) then
+		self.VisionTicks = self.VisionTicks -1
+	end
+	
+	
 	--self:Speak(tostring(self:isInBase()))
 	
 	self.MyTaskManager:update()
@@ -1950,6 +1968,18 @@ function SuperSurvivor:WalkToUpdate()
    end
    
    --]]
+end
+
+
+
+function SuperSurvivor:StopMovement() -- New Function that ONLY refers to moving around
+	--print(self:getName() .. " StopWalk");
+	self.player:setPath2(nil)
+	self.player:getModData().bWalking = false
+	self.player:getModData().Running = false
+	self:setRunning(false)
+	self.player:setSneaking(false)	
+	self.player:NPCSetJustMoved(false)
 end
 
 function SuperSurvivor:StopWalk()
@@ -2644,16 +2674,27 @@ end
 
 -- The location of npc's attacking
 -- Brings back  SwipeStatePlayer from un-commented
-
+-- TaskMangerIn:getTask():ForceFinish() Hold this
 
 function SuperSurvivor:Attack(victim)
 	
 	self:Speak("Attacking in "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
 
-	-- AtkTicks will start counting down to 0 ONLY if not already attacking, if not 0, or not has fallen on the ground
-	if (self.AtkTicks >= 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) then
+	-- AtkTicks will start counting down to 0 ONLY if not already attacking, if not 0, or not has fallen on the ground and also not being attacked by player
+	if (self.AtkTicks >= 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
 		self.AtkTicks = self.AtkTicks - 1
-	end
+			self.player:NPCSetAiming(false)
+			self.player:NPCSetAttack(false)
+	return false end 
+	
+	-- Fixes a rare scenario where getting to loop attack
+	if (self.AtkTicks <= 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) then 
+		self.AtkTicks = 3
+	return false end
+	
+	if(self.player:getModData().hitByCharacter == true)then
+		self.AtkTicks = 3
+	return false end 
 
 	if(self.player:getCurrentState() == SwipeStatePlayer.instance()) then
 		self.AtkTicks = 3 -- This will MAKE SURE there's a cooldown between attacks
@@ -2673,14 +2714,16 @@ function SuperSurvivor:Attack(victim)
 		end
 		
 		--print(self:getName().."t walking2")
-		self:StopWalk()
+--		Using updated StopMovement() instead 		
+--		self:StopWalk()
+
+--		self:StopMovement()
 		self.player:faceThisObject(victim);
 		
 		if(self.UsingFullAuto) then self.TriggerHeldDown = true end
 		if(self.player ~= nil) then 
-			local distance = getDistanceBetween(self.player,victim) / 2 -- divides by a 4th range
+			local distance = getDistanceBetween(self.player,victim)
 			local minrange = self:getMinWeaponRange() + 0.1
---			local minrange = self:getMinWeaponRange() + 0.1
 			--print("distance was ".. tostring(distance))
 			local weapon = self.player:getPrimaryHandItem();
 			
@@ -2688,9 +2731,11 @@ function SuperSurvivor:Attack(victim)
 			if (weapon ~= nil) then
 				damage = weapon:getMaxDamage();
 			end
+
 			self.player:NPCSetAiming(true)
 			self.player:NPCSetAttack(true)
-
+			
+			
 			-- Should prevent spam attacks when not in direct range
 --			if (distance > minrange) and (self.AtkTicks <= 3) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) then 
 --				self.AtkTicks = 3
@@ -2699,7 +2744,7 @@ function SuperSurvivor:Attack(victim)
 
 			
 -- Removed the 'shove' machanic, because it's possible for the npc to just spam this move no matter what.as
---			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks < 0)  then
+--			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks < 0)  then	
 			if(distance < minrange) and (self.AtkTicks < 0)  then
 				--self:Speak("Shove!"..tostring(distance).."/"..tostring(minrange))
 --				victim:Hit(weapon, self.player, damage, true, 1.0, false)
@@ -2711,7 +2756,6 @@ function SuperSurvivor:Attack(victim)
 			end
 			
 		end
-			self:WalkToUpdate(self.player)
 	else
 		local pwep = self.player:getPrimaryHandItem()
 		local pwepContainer = pwep:getContainer()
