@@ -24,7 +24,7 @@ function SuperSurvivor:new(isFemale,square)
 	o.GroupBraveryUpdatedTicks = 0
 	o.VisionTicks = 0
 	o.WaitTicks = 0
-	o.AtkTicks = 0
+	o.AtkTicks = 3
 	o.TriggerHeldDown = false
 	o.player = o:spawnPlayer(square, isFemale)
 	o.userName = TextDrawObject.new()
@@ -148,7 +148,7 @@ function SuperSurvivor:newLoad(ID,square)
 	o.NumberOfBuildingsLooted = 0
 	o.WaitTicks = 0
 	o.VisionTicks = 0
-	o.AtkTicks = 0
+	o.AtkTicks = 3
 	o.TriggerHeldDown = false
 	o.player = o:loadPlayer(square,ID)
 	o.userName = TextDrawObject.new()
@@ -236,7 +236,7 @@ function SuperSurvivor:newSet(player)
 	o.player = player
 	o.WaitTicks = 0
 	o.VisionTicks = 0
-	o.AtkTicks = 0
+	o.AtkTicks = 3
 	o.LastSurvivorSeen = nil
 	o.LastMemberSeen = nil
 	o.TicksAtLastDetectNoFood = 0
@@ -1855,10 +1855,10 @@ function SuperSurvivor:update()
 		end
 	end
 		
---	self:NPCcalculateWalkSpeed()
+	self:NPCcalculateWalkSpeed()
 	
 	if (self.VisionTicks < 0) then
-		self:NPCcalculateWalkSpeed()
+--		self:NPCcalculateWalkSpeed()
 		self:DoVision()
 		self.VisionTicks = 1
 	end
@@ -2689,16 +2689,16 @@ function SuperSurvivor:Attack(victim)
 	end 
 	
 	-- Fixes a rare scenario where getting to loop attack
-	if (self.AtkTicks <= 0) and (self.player:getCurrentState() == SwipeStatePlayer.instance()) then 
-		self.AtkTicks = 3
-	return false end
+--	if (self.AtkTicks <= 0) and (self.player:getCurrentState() == SwipeStatePlayer.instance()) then 
+--		self.AtkTicks = 3
+--	end
 	
 	if(self.player:getModData().hitByCharacter == true)then
-		self.AtkTicks = 3
+		self.AtkTicks = 1
 	return false end 
 
 	if(self.player:getCurrentState() == SwipeStatePlayer.instance()) then
-		self.AtkTicks = 3 -- This will MAKE SURE there's a cooldown between attacks
+		self.AtkTicks = 1 -- This will MAKE SURE there's a cooldown between attacks
 	return false end 	  -- already attacking wait
 	
 	if(self.player:getModData().felldown) then  -- This will add timer when fallen
