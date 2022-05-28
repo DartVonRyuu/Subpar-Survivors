@@ -290,6 +290,7 @@ function SuperSurvivorSoldierSpawn(square)
 	return ASuperSurvivor
 end
 
+-- hmm...
 function SuperSurvivorRandomSpawn(square)
 	
 
@@ -922,6 +923,166 @@ end
 
 Events.OnEquipPrimary.Add(SuperSurvivorsOnEquipPrimary);
 
+
+
+
+
+
+-- New: Since Raiders *seem* to be a bit 'smarter' than the survivors part of the code...
+-- how about making this half of the mod manage spawning of npcs for now?
+-- The likelyhood of the survivors dying is usually pretty high so lag is partly doubtful
+function SuperSurvivorsExtraSurvivorsManager()
+
+	if(getSpecificPlayer(0) == nil) then return false end
+	--this unrelated to raiders but need this to run every once in a while
+		getSpecificPlayer(0):getModData().hitByCharacter = false
+		getSpecificPlayer(0):getModData().semiHostile = false
+		getSpecificPlayer(0):getModData().dealBreaker = nil
+		
+		if(getSpecificPlayer(0):isAsleep())then
+			SSM:AsleepHealAll()
+		end
+	--end
+
+	-- Spawning Data zone
+	if(getSpecificPlayer(0):getModData().LastRaidTime == nil) then getSpecificPlayer(0):getModData().LastRaidTime = (RaidsStartAfterThisManyHours + 2) end
+	local LastRaidTime = getSpecificPlayer(0):getModData().LastRaidTime
+	
+	--rediculous amount of raiders ---
+	--RaidsAtLeastEveryThisManyHours = 1
+	--RaidsStartAfterThisManyHours = 0
+	--RaidChanceForEveryTenMinutes = 4
+	--rediculous amount of raiders ---	END
+
+	local mySS = SSM:Get(0)
+	local hours = math.floor(getGameTime():getWorldAgeHours())
+	local chance = RaidChanceForEveryTenMinutes
+	if(mySS ~= nil and not mySS:isInBase()) then
+		chance = (RaidChanceForEveryTenMinutes*1.5)
+	end
+	
+	-- this should just make npcs spawn 
+	local RaidersStartTimePassed = (hours >= 1) -- hours >= RaidsStartAfterThisManyHours
+	local RaiderResult = (ZombRand(chance) == 0)
+	local RaiderAtLeastTimedExceeded = ((hours - LastRaidTime) >= 1)
+	
+	--print("Last raid time is: "..tostring(LastRaidTime)..". Current time is:"..tostring(hours))
+	--print("Raiders start time is passed?: "..tostring(RaidersStartTimePassed))
+	--print("chance for raiders is 1 in "..tostring(chance).." result is "..tostring(RaiderResult))
+	--print("At least this many days (".. tostring(RaidsAtLeastEveryThisManyHours) ..") time exceeded: "..tostring(RaiderAtLeastTimedExceeded))
+	
+	if RaidersStartTimePassed and ( RaiderResult or RaiderAtLeastTimedExceeded ) and mySS ~= nil then
+		
+		
+		local hisGroup = mySS:getGroup()
+		
+		if(hisGroup == nil) then return false end
+		
+		local bounds = hisGroup:getBounds()
+		local center
+		if(bounds) then center = getCenterSquareFromArea(bounds[1],bounds[2],bounds[3],bounds[4],bounds[5]) end
+		if not center then center = getSpecificPlayer(0):getCurrentSquare() end
+		
+		local spawnSquare
+		
+		local success = false
+		local range = 45
+		local drange = range*2
+		
+		for i=1,10 do		
+			
+			local spawnLocation = ZombRand(4)
+			if(spawnLocation ==0) then
+				--mySS:Speak("spawn from north")
+				x = center:getX() + (ZombRand(drange) - range);
+				y = center:getY() - range;
+				
+			elseif(spawnLocation ==1) then 
+				--mySS:Speak("spawn from east")
+				x = center:getX() + range;
+				y = center:getY() + (ZombRand(drange) - range);	
+			elseif(spawnLocation ==2) then 
+				--mySS:Speak("spawn from south")
+				x = center:getX() + (ZombRand(drange) - range);
+				y = center:getY() + range;
+			
+			elseif(spawnLocation ==3) then 
+				--mySS:Speak("spawn from west")
+				x = center:getX() - range;
+				y = center:getY() + (ZombRand(drange) - range);	
+		
+			end
+		
+			spawnSquare = getCell():getGridSquare(x,y,0)
+			
+			if (spawnSquare ~= nil) and (not hisGroup:IsInBounds(spawnSquare)) and spawnSquare:isOutside() and (not spawnSquare:IsOnScreen()) then 
+				success = true
+				break
+			end
+		
+		end
+		
+		
+		if(success) and (spawnSquare) then
+			getSpecificPlayer(0):getModData().LastRaidTime = hours
+			if(getSpecificPlayer(0):isAsleep()) then 
+				getSpecificPlayer(0):Say("[DEBUG] - Custom Survivor Has spawned!")
+				getSpecificPlayer(0):forceAwake()
+			else
+				getSpecificPlayer(0):Say("[DEBUG] - Custom Survivor Has spawned!");
+			end
+			local RaiderGroup = SSGM:newGroup()
+			local GroupSize = ZombRand(1,hisGroup:getMemberCount()) + math.floor(hours/(24*30))
+			if (GroupSize > 10) then GroupSize = 10
+			elseif (GroupSize < 1) then GroupSize = 1 end
+			local oldGunSpawnChance = ChanceToSpawnWithGun 
+			ChanceToSpawnWithGun = ChanceToSpawnWithGun * 1.5
+		
+			for i=1, GroupSize do
+			
+				raider = SuperSurvivorRandomSpawn(spawnSquare)
+				if(i == 1) then RaiderGroup:addMember(raider,"Leader")
+				else RaiderGroup:addMember(raider,"Guard") end
+				raider:setHostile(false)
+				raider.player:getModData().isRobber = true
+				local name = raider:getName()
+				raider:setName("Survivor "..name)
+				
+				-- The PursueTask involves base building
+				 raider:getTaskManager():AddToTop(PursueTask:new(raider,mySS:Get()))
+				
+				if(raider:hasWeapon() == false) then raider:giveWeapon(MeleWeapons[ZombRand(1,#MeleWeapons)]) end
+			
+				local food, bag
+				bag = raider:getBag()
+				local count = ZombRand(0,3)
+				for i=1, count do
+					food = "Base."..tostring(CannedFoods[ZombRand(#CannedFoods)+1])
+					bag:AddItem(food)
+				end
+				local count = ZombRand(0,3)
+				for i=1, count do
+					food = "Base."..tostring(PerishableFoods[ZombRand(#PerishableFoods)+1])
+					bag:AddItem(food)
+				end
+				
+				local number = ZombRand(1,3)
+				setRandomSurvivorSuit(raider,"Rare","Bandit"..tostring(number))
+			end
+			ChanceToSpawnWithGun = oldGunSpawnChance
+			RaiderGroup:AllSpokeTo()
+			
+		end
+		
+		
+	
+	end
+
+
+end
+Events.EveryTenMinutes.Add(SuperSurvivorsExtraSurvivorsManager);
+
+
 function SuperSurvivorsRaiderManager()
 
 	if(getSpecificPlayer(0) == nil) then return false end
@@ -1066,9 +1227,8 @@ function SuperSurvivorsRaiderManager()
 
 
 end
-
-
 Events.EveryTenMinutes.Add(SuperSurvivorsRaiderManager);
+
 NumberOfLocalPlayers = 0
 function SSCreatePlayerHandle(newplayerID)
 		
