@@ -102,6 +102,7 @@ function AttemptEntryIntoBuildingTask:update()
 					if(debugOutput) then print( self.parent:getName() .. " " .."trying to get to square inside") end
 				if(debugOutput) then 	self.parent:Speak(tostring(self.parent:getWalkToAttempt(self.TargetSquare))) end
 					self.parent:walkTo(self.TargetSquare)
+				--	self.parent.player:Say("Trying Window!")
 				else
 					self.TryWindow = true
 				end
@@ -123,6 +124,7 @@ function AttemptEntryIntoBuildingTask:update()
 					else
 						self:giveUpOnBuilding()
 						print("gave up on building because: no window found to try in enter through")
+						self.parent.player:Say("gave up on building because: no window found to try in enter through")
 					end
 					
 				else
