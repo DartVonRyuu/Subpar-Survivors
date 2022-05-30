@@ -48,44 +48,40 @@ function PursueTask:isValid()
 end
 
 function PursueTask:update()
-	
-	if(not self:isValid()) or (self:isComplete()) then return false end
-	
-	
-	if(self.parent.player:CanSee(self.Target) == false) then
-		
-		local distancetoLastSpotSeen = getDistanceBetween(self.LastSquareSeen,self.parent.player)
-		if(distancetoLastSpotSeen > 2.5) then
-		
-			self.parent:setRunning(true) 						
-			
-			self.parent:walkToDirect(self.LastSquareSeen)
-			
-			if(ZombRand(4) == 0) and (self.parent:isSpeaking() == false) then
-				self.parent:Speak(getSpeech("SawHimThere"))
-			end
-			
-		else
-			self.parent:setRunning(false)
-			self.Complete = true
-			self.parent:Speak(getText("ContextMenu_SD_WhereHeGo"))
-		end
-	
+	local distancetoStayAwayZone = getDistanceBetween(self.LastSquareSeen,self.parent.player)
+	local distancetoLastSpotSeen = getDistanceBetween(self.LastSquareSeen,self.parent.player)
+	local theDistance = getDistanceBetween(self.Target, self.parent.player)
+
+-- self.parent:MarkBuildingExplored() and self.parent:inFrontOfLockedDoor() self.parent:MarkBuildingExplored()
+	if (self.parent:inUnLootedBuilding() and (self.parent:inFrontOfLockedDoor())) then
+		self.parent:Speak("Yes")
 	else
-		local theDistance = getDistanceBetween(self.Target, self.parent.player)
-		
-		self.LastSquareSeen = self.Target:getCurrentSquare()
-		
-		if(self.TargetSS) and (self.TargetSS:getBuilding()~= nil) then self.parent.TargetBuilding = self.TargetSS:getBuilding() end
-		
-		
-		if(theDistance > 6) then self.parent:setRunning(true) 
-		else self.parent:setRunning(false) end
-		
-		
-		self.parent:walkToDirect(self.Target:getCurrentSquare())
+		self.parent:Speak("No")
+		self.parent:MarkBuildingExplored()
 	end
-	
+
+	if(not self:isValid()) or (self:isComplete()) then return false end
+		if(self.parent.player:CanSee(self.Target) == false) then	
+			if(distancetoLastSpotSeen > 2.5) then
+				self.parent:setRunning(true) 						
+				self.parent:walkToDirect(self.LastSquareSeen)
+				if(ZombRand(4) == 0) and (self.parent:isSpeaking() == false) then
+					self.parent:Speak(getSpeech("SawHimThere"))
+				end
+			else
+				self.parent:setRunning(false)
+				self.Complete = true
+				self.parent:Speak(getText("ContextMenu_SD_WhereHeGo"))
+			end
+		else
+			self.LastSquareSeen = self.Target:getCurrentSquare()
+			if(self.TargetSS) and (self.TargetSS:getBuilding()~= nil) then self.parent.TargetBuilding = self.TargetSS:getBuilding() end
+			if(theDistance > 6) then self.parent:setRunning(true) 
+			else self.parent:setRunning(false) end
+
+			self.parent:walkToDirect(self.Target:getCurrentSquare())
+		end
+		
 	
 		
 	
