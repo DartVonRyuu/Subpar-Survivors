@@ -1048,7 +1048,7 @@ function SuperSurvivorsExtraSurvivorsManager()
 				local name = raider:getName()
 				raider:setName("Survivor "..name)
 				
-				-- The PursueTask involves base building
+				-- The PursueTask
 				 raider:getTaskManager():AddToTop(PursueTask:new(raider,mySS:Get()))
 				
 				if(raider:hasWeapon() == false) then raider:giveWeapon(MeleWeapons[ZombRand(1,#MeleWeapons)]) end
@@ -1080,7 +1080,7 @@ function SuperSurvivorsExtraSurvivorsManager()
 
 
 end
-Events.EveryTenMinutes.Add(SuperSurvivorsExtraSurvivorsManager);
+-- Events.EveryTenMinutes.Add(SuperSurvivorsExtraSurvivorsManager);
 
 
 function SuperSurvivorsRaiderManager()
