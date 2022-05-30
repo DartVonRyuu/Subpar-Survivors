@@ -67,7 +67,7 @@ function AttemptEntryIntoBuildingTask:update()
 	
 	if(self.parent:getSeenCount() == 0) then self.parent:setSneaking(true) end
 	
-	if(self.parent:getDangerSeenCount() > 1) or (self.ClimbThroughWindowAttempts > 12) then 
+	if(self.parent:getDangerSeenCount() > 1) or (self.ClimbThroughWindowAttempts > 4) then 
 		print("gave up on building because: (self.ClimbThroughWindowAttempts > 12) or seen zombie close:"..tostring(self.ClimbThroughWindowAttempts))
 		self:giveUpOnBuilding() 
 	end
@@ -80,7 +80,7 @@ function AttemptEntryIntoBuildingTask:update()
 		
 			local door = self.parent:inFrontOfDoor()
 			
-			if self.TryWindow == false and (door ~= nil) and (door:isLocked() or door:isLockedByKey())  then
+			if self.TryWindow == false and (door ~= nil) and (door:isLocked() or door:isLockedByKey() or door:isBarricaded())  then
 				--if (not self.parent:isTargetBuildingClaimed(self.parent.TargetBuilding)) then
 				--	-- little pig, little pig
 				--	door:setIsLocked(false)
