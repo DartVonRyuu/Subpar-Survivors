@@ -24,7 +24,7 @@ function SuperSurvivor:new(isFemale,square)
 	o.GroupBraveryUpdatedTicks = 0
 	o.VisionTicks = 0
 	o.WaitTicks = 0
-	o.AtkTicks = 3
+	o.AtkTicks = 1
 	o.BraveryTicks = 10
 	o.TriggerHeldDown = false
 	o.player = o:spawnPlayer(square, isFemale)
@@ -149,7 +149,7 @@ function SuperSurvivor:newLoad(ID,square)
 	o.NumberOfBuildingsLooted = 0
 	o.WaitTicks = 0
 	o.VisionTicks = 0
-	o.AtkTicks = 3
+	o.AtkTicks = 1
 	o.BraveryTicks = 10
 	o.TriggerHeldDown = false
 	o.player = o:loadPlayer(square,ID)
@@ -238,7 +238,7 @@ function SuperSurvivor:newSet(player)
 	o.player = player
 	o.WaitTicks = 0
 	o.VisionTicks = 0
-	o.AtkTicks = 3
+	o.AtkTicks = 1
 	o.BraveryTicks = 10
 	o.LastSurvivorSeen = nil
 	o.LastMemberSeen = nil
@@ -1437,6 +1437,9 @@ function SuperSurvivor:isWalking()
 end
 
 
+-- can this use task 
+-- self:getTaskManager():AddToTop(AttemptEntryIntoBuildingTask:new(self, self.TargetBuilding))
+-- ?
 function SuperSurvivor:walkTo(square)
 
 
@@ -1457,8 +1460,8 @@ function SuperSurvivor:walkTo(square)
 		adjacent = AdjacentFreeTileFinder.FindWindowOrDoor(parent, square, self.player);
 	end
 	if adjacent ~= nil then
-		local door = self:inFrontOfDoor()
-		if (door ~= nil) and (door:isLocked() or door:isLockedByKey()) then
+		local door = self:inFrontOfDoor() -- found another location door isBarricaded was needed 
+		if (door ~= nil) and (door:isLocked() or door:isLockedByKey() or door:isBarricaded()) then
 			local building = door:getOppositeSquare():getBuilding()
 			--if (builing == nil) or (not self.parent:isTargetBuildingClaimed(builing)) then
 				self:DebugSay("little pig, little pig")
@@ -1466,7 +1469,8 @@ function SuperSurvivor:walkTo(square)
 			--	door:setLockedByKey(false)
 			--end
 		end
-		
+
+
 		self:WalkToAttempt(square)
 		self:WalkToPoint(adjacent:getX(),adjacent:getY(),adjacent:getZ())
 	end
@@ -1528,8 +1532,8 @@ function SuperSurvivor:WalkToPoint(tx, ty, tz)
 function SuperSurvivor:inFrontOfLockedDoor()
 
 	local door = self:inFrontOfDoor()
-			
-	if (door ~= nil) and (door:isLocked() or door:isLockedByKey())  then
+			-- Added isBarricaded, hopefully this will fix the big issue
+	if (door ~= nil) and (door:isLocked() or door:isLockedByKey() or door:isBarricaded())  then
 		return true
 	else 
 		return false
@@ -1619,7 +1623,7 @@ function SuperSurvivor:NPCcalculateInjurySpeed(bodypart,b)
 	local deepWoundSpeedModifier = bodypart:getDeepWoundSpeedModifier();
 	local n = 0.0;
 	if ((bodypart:getType() == "Foot_L" or bodypart:getType() == "Foot_R") and (bodypart:getBurnTime() > 5.0 or bodypart:getBiteTime() > 0.0 or bodypart:deepWounded() or bodypart:isSplint() or bodypart:getFractureTime() > 0.0 or bodypart:haveGlass())) then
-		n = 1.0f
+		n = 1.0
 		if (bodypart:bandaged()) then
 			n = 0.7;
 		end
@@ -1823,20 +1827,15 @@ function SuperSurvivor:update()
 	
 	--self.player:Say(tostring(self:isInAction()) ..",".. tostring(self.TicksSinceSquareChanged > 6) ..",".. tostring(self:inFrontOfLockedDoor()) ..",".. tostring(self:getTaskManager():getCurrentTask() ~= "Enter New Building") ..",".. tostring(self.TargetBuilding ~= nil))
 	--print( self:getName()..": "..tostring((self.TargetBuilding ~= nil)))
-	if (
-		(self:inFrontOfLockedDoor())
-		or
-		(self:inFrontOfWindow())
-	) and (
-		self:getTaskManager():getCurrentTask() ~= "Enter New Building"
-	) and (
-		self.TargetBuilding ~= nil
-	) and (
+	if ( (self:inFrontOfLockedDoor()) or (self:inFrontOfWindow())
+		 ) and ( self:getTaskManager():getCurrentTask() ~= "Enter New Building"
+		 ) and ( self.TargetBuilding ~= nil
+		 ) and (
 		(
 			(self.TicksSinceSquareChanged > 6)
 			and (self:isInAction() == false)
 			and (
-				self:getCurrentTask() == "None"
+				   self:getCurrentTask() == "None"
 				or self:getCurrentTask() == "Find This"
 				or self:getCurrentTask() == "Find New Building"
 			)
@@ -1853,11 +1852,11 @@ function SuperSurvivor:update()
 		self.TicksSinceSquareChanged = 0
 	end
 	
-	if ((self.TicksSinceSquareChanged > 7) and (self:Get():getModData().bWalking == true)) or (self.TicksSinceSquareChanged > 500) then
+	if ((self.TicksSinceSquareChanged > 7) and (self:Get():getModData().bWalking == true)) or (self.TicksSinceSquareChanged > 10) then -- changing 500 to 10 to test stuck
 		--print("detected survivor stuck walking: " .. self:getName() .. " for " .. self.TicksSinceSquareChanged .. " x" .. self.StuckCount)
 		self.StuckCount = self.StuckCount + 1
 	--elseif ((self.TicksSinceSquareChanged > 10) and (self:Get():getModData().bWalking == true)) then
-		if (self.StuckCount > 100) then
+		if (self.StuckCount > 25) then -- 100 to 25 changed
 			--print("trying to knock survivor out of frozen state: " .. self:getName());
 			self.StuckCount = 0
 			ISTimedActionQueue.add(ISGetHitFromBehindAction:new(self.player,getSpecificPlayer(0)))
@@ -1866,25 +1865,28 @@ function SuperSurvivor:update()
 			local yoff = self.player:getY() + ZombRand(-3,3)		
 			self:StopWalk()
 			self:WalkToPoint(xoff,yoff,self.player:getZ())
-			self:Wait(2)
+			self:Wait(1) -- set 2 to 1
 		end
 	end
-		
+	
+	-- Do NOT add this to VisionTicks, It will show easily visible lag
 	self:NPCcalculateWalkSpeed()
 	
-	if (self.VisionTicks < 0) then
---		self:NPCcalculateWalkSpeed()
+	-- New: 3 tick variable that when hits 0, THEN do vision and taskmanager update. Seems to give better fps 
+	-- It's not perfect. SOMETIMES there's delay in attacks due to AtkTicks, but not often. It's better than lag!
+	if (self.VisionTicks > 0) then
 		self:DoVision()
-		self.VisionTicks = 1
+		self.MyTaskManager:update()
+		self.VisionTicks = self.VisionTicks - 1
 	end
-	if (self.VisionTicks >= 0) then
-		self.VisionTicks = self.VisionTicks -1
+	if (self.VisionTicks == 0) then
+		self.VisionTicks = self.VisionTicks + 1
 	end
 	
 	
 	--self:Speak(tostring(self:isInBase()))
 	
-	self.MyTaskManager:update()
+    --self.MyTaskManager:update()
 	
 	if(self.Reducer % 480 == 0) then 
 		if(DebugMode) then print(self:getName().." task:"..MyTaskManager:getCurrentTask()) end
@@ -2697,10 +2699,8 @@ function SuperSurvivor:Attack(victim)
 
 	-- Don't use a return False on this IF statement, that causes the if statements below get ignored 
 	-- AtkTicks will start counting down to 0 ONLY if not already attacking, if not 0, or not has fallen on the ground and also not being attacked by player
-	if (self.AtkTicks >= 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
+	if (self.AtkTicks > 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
 		self.AtkTicks = self.AtkTicks - 1
-			self.player:NPCSetAiming(false)
-			self.player:NPCSetAttack(false)
 	end 
 	
 	-- Fixes a rare scenario where getting to loop attack
@@ -2717,10 +2717,10 @@ function SuperSurvivor:Attack(victim)
 	return false end 	  -- already attacking wait
 	
 	if(self.player:getModData().felldown) then  -- This will add timer when fallen
-		self.AtkTicks = 3  	-- This number is because recovering from literally falling down
+		self.AtkTicks = 1  	-- This number is because recovering from literally falling down
 	return false end  		-- Forces the function to quit and start over because fell down
 
-	if(self.AtkTicks >= 0) then return false end  -- Don't want to attack prior to 0 timer
+	if(self.AtkTicks > 0) then return false end  -- Don't want to attack prior to 0 timer
 
 	if not (instanceof(victim,"IsoPlayer") or instanceof(victim,"IsoZombie")) then return false end
 	if(self:WeaponReady()) then
@@ -2731,15 +2731,16 @@ function SuperSurvivor:Attack(victim)
 		
 		--print(self:getName().."t walking2")
 --		Using updated StopMovement() instead 		
---		self:StopWalk()
+		self:StopWalk()
 
 --		self:StopMovement()
 		self.player:faceThisObject(victim);
 		
 		if(self.UsingFullAuto) then self.TriggerHeldDown = true end
 		if(self.player ~= nil) then 
-			local distance = getDistanceBetween(self.player,victim)
-			local minrange = self:getMinWeaponRange() + 0.1
+			-- Distance divides by 2 (half) so there is ABSOLUTELY no way the npc will swing at the air
+			local distance = getDistanceBetween(self.player,victim) / 2 
+			local minrange = self:getMinWeaponRange()
 			--print("distance was ".. tostring(distance))
 			local weapon = self.player:getPrimaryHandItem();
 			
@@ -2748,26 +2749,24 @@ function SuperSurvivor:Attack(victim)
 				damage = weapon:getMaxDamage();
 			end
 
+			-- Should reset timer when chasing entity, Change ~= to ==
+			if (getDistanceBetween(self.player,victim) > minrange) and (self.AtkTicks < 1) and (self:getTaskManager():getCurrentTask() == "Pursue") then 
+				self.AtkTicks = 1
+			end
+
 			self.player:NPCSetAiming(true)
 			self.player:NPCSetAttack(true)
-			
-			
-			-- Should prevent spam attacks when not in direct range
---			if (distance > minrange) and (self.AtkTicks <= 3) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) then 
---				self.AtkTicks = 3
---			return false end
-
-
-			
+	
 -- Removed the 'shove' machanic, because it's possible for the npc to just spam this move no matter what.as
 --			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks < 0)  then	
-			if(distance < minrange) and (self.AtkTicks < 0)  then
-				--self:Speak("Shove!"..tostring(distance).."/"..tostring(minrange))
+			if(distance < minrange) and (self.AtkTicks <= 0)  then
+				victim:Hit(weapon, self.player, damage, false, 1.0, false) -- Line moved to here			
+--				self:Speak("Shove!"..tostring(distance).."/"..tostring(minrange))
 --				victim:Hit(weapon, self.player, damage, true, 1.0, false)
 --			else
 --				if (self.AtkTicks < 0) then
-				--self:Speak("Attack!"..tostring(distance).."/"..tostring(minrange))
-					victim:Hit(weapon, self.player, damage, false, 1.0, false)
+--					self:Speak("Attack!"..tostring(distance).."/"..tostring(minrange))
+--					victim:Hit(weapon, self.player, damage, false, 1.0, false)
 --				end
 			end
 			
