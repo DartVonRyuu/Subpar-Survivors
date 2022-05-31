@@ -76,9 +76,9 @@ function AIManager(TaskMangerIn)
 	end
 
 	-- THIS ONE WORKS! So far: Hostile enemies will goto the door, and just walk away after a single try!
-	if (TaskMangerIn:getCurrentTask() == "Pursue") or not (ASuperSurvivor:getCurrentTask() == "None") and (ASuperSurvivor:inFrontOfLockedDoor()) and (ASuperSurvivor:Get():isOutside()) then
+	if ((TaskMangerIn:getCurrentTask() == "Pursue") or (not (ASuperSurvivor:getCurrentTask() == "None"))) and (ASuperSurvivor:inFrontOfLockedDoor()) and (ASuperSurvivor:Get():isOutside()) then
 		ASuperSurvivor:Speak("Damnit, door's barricaded!")
-		if not (TaskMangerIn:getCurrentTask() == "Enter New Building") then
+		if (not (TaskMangerIn:getCurrentTask() == "Enter New Building")) and (ASuperSurvivor:Get():isOutside()) then
 			TaskMangerIn:clear()
 			TaskMangerIn:AddToTop(AttemptEntryIntoBuildingTask:new(ASuperSurvivor, ASuperSurvivor.TargetBuilding))
 		end
