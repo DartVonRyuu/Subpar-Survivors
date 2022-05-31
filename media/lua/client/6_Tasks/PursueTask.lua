@@ -53,11 +53,13 @@ function PursueTask:update()
 	local theDistance = getDistanceBetween(self.Target, self.parent.player)
 
 -- self.parent:MarkBuildingExplored() and self.parent:inFrontOfLockedDoor() self.parent:MarkBuildingExplored()
-	if (self.parent:inUnLootedBuilding() and (self.parent:inFrontOfLockedDoor())) then
-		self.parent:Speak("Yes")
+	if (self.TargetSS:getBuilding()~= nil) and (self.parent:inFrontOfLockedDoor()) then
+		self.parent:Speak("I'm in front of a locked door")
+		self.parent:MarkBuildingExplored(self.parent:getBuilding())
+		-- Since the tasks switch between this and AttemptEntryIntoBuilding, just make it where if this if statment = true, end it.
 	else
-		self.parent:Speak("No")
-		self.parent:MarkBuildingExplored()
+		self.parent:Speak("I'm not in front of a locked door")
+		-- self.parent:MarkBuildingExplored(self.parent.building)
 	end
 
 	if(not self:isValid()) or (self:isComplete()) then return false end

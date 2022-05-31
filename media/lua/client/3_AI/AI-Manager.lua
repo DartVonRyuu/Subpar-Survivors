@@ -74,7 +74,23 @@ function AIManager(TaskMangerIn)
 			return TaskMangerIn
 		end
 	end
+
+	-- THIS ONE WORKS! So far: Hostile enemies will goto the door, and just walk away after a single try!
+	if ((TaskMangerIn:getCurrentTask() == "Enter New Building") or (TaskMangerIn:getCurrentTask() == "Pursue")) and (ASuperSurvivor:inFrontOfLockedDoor()) then
+		ASuperSurvivor:Speak("Damnit, door's barricaded!")
+		TaskMangerIn:clear()
+		-- After clearing the pursue, get into the building maybe
+		if (TaskMangerIn:getCurrentTask() ~= "Enter New Building") and (not ASuperSurvivor:getBuildingExplored(ASuperSurvivor.TargetBuilding)) then
+			TaskMangerIn:AddToTop(AttemptEntryIntoBuildingTask:new(ASuperSurvivor, ASuperSurvivor.TargetBuilding))
+		end	
+		-- Now see if the NPC is trying to get to the building they marked explored, then if so? Remove task.
+		if (TaskMangerIn:getCurrentTask() == "Enter New Building") and (ASuperSurvivor:getBuildingExplored(ASuperSurvivor.TargetBuilding)) then
+			TaskMangerIn:clear()
+		end
 		
+	end
+
+
 	if ((TaskMangerIn:getCurrentTask() ~= "Attack") and (TaskMangerIn:getCurrentTask() ~= "Threaten") and not ((TaskMangerIn:getCurrentTask() == "Surender") and EnemyIsSurvivor) and (TaskMangerIn:getCurrentTask() ~= "Doctor") and (ASuperSurvivor:isInSameRoom(ASuperSurvivor.LastEnemeySeen)) and (TaskMangerIn:getCurrentTask() ~= "Flee")) and ((ASuperSurvivor:hasWeapon() and ((ASuperSurvivor:getDangerSeenCount() >= 1) or (ASuperSurvivor:isEnemyInRange(ASuperSurvivor.LastEnemeySeen)))) or (ASuperSurvivor:hasWeapon() == false and (ASuperSurvivor:getDangerSeenCount() == 1) and (not EnemyIsSurvivor))) and (IHaveInjury == false) then
 		--ASuperSurvivor:Speak( ASuperSurvivor:getName()..": need to attack")
 		if(ASuperSurvivor.player ~= nil) and (ASuperSurvivor.player:getModData().isRobber) and (not ASuperSurvivor.player:getModData().hitByCharacter) and EnemyIsSurvivor and (not EnemySuperSurvivor.player:getModData().dealBreaker) then TaskMangerIn:AddToTop(ThreatenTask:new(ASuperSurvivor,EnemySuperSurvivor,"Scram"))

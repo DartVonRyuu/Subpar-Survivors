@@ -1526,20 +1526,6 @@ function SuperSurvivor:WalkToPoint(tx, ty, tz)
         
   end
 
-
-
-
-function SuperSurvivor:inFrontOfLockedDoor()
-
-	local door = self:inFrontOfDoor()
-			-- Added isBarricaded, hopefully this will fix the big issue
-	if (door ~= nil) and (door:isLocked() or door:isLockedByKey() or door:isBarricaded())  then
-		return true
-	else 
-		return false
-	end
-	
-end
 function SuperSurvivor:inFrontOfDoor()
 
 	 local cs = self.player:getCurrentSquare()
@@ -1558,14 +1544,48 @@ function SuperSurvivor:inFrontOfDoor()
 	 return nil 
 	
 end
-function SuperSurvivor:inFrontOfWindow()
+function SuperSurvivor:inFrontOfLockedDoor()
+
+	local door = self:inFrontOfDoor()
+			-- Added isBarricaded, hopefully this will fix the big issue
+	if (door ~= nil) and (door:isLocked() or door:isLockedByKey() or door:isBarricaded()) then
+		return true
+	else 
+		return false
+	end
+end
+
+-- since inFrontOfWindow (not alt) doesn't have this function's code
+function SuperSurvivor:inFrontOfWindowAlt() 
 
 	 local cs = self.player:getCurrentSquare()
-	 local fsquare = cs:getTileInDirection(self.player:getDir());
-	 if cs and fsquare then return cs:getWindowTo(fsquare)
-	 else return nil end
-	
+	 local osquare = GetAdjSquare(cs,"N")
+	 if cs and osquare and cs:getWindowTo(osquare) then return cs:getWindowTo(osquare) end
+	 
+	 osquare = GetAdjSquare(cs,"E")
+	 if cs and osquare and cs:getWindowTo(osquare) then return cs:getWindowTo(osquare) end
+	 
+	 osquare = GetAdjSquare(cs,"S")
+	 if cs and osquare and cs:getWindowTo(osquare) then return cs:getWindowTo(osquare) end
+	 
+	 osquare = GetAdjSquare(cs,"W")
+	 if cs and osquare and cs:getWindowTo(osquare) then return cs:getWindowTo(osquare) end
+	 
+	 return nil 
 end
+function SuperSurvivor:inFrontOfBarricadedWindowAlt()
+-- Used door locked code for this, added 'alt' to function name just to be safe for naming
+	local window = self:inFrontOfWindowAlt()
+
+	if (window ~= nil) and (window:isBarricaded()) then
+		return true
+	else 
+		return false
+	end
+end
+
+
+
 function SuperSurvivor:inFrontOfStairs()
 
 	local cs = self.player:getCurrentSquare()
@@ -1584,8 +1604,19 @@ function SuperSurvivor:inFrontOfStairs()
 	if cs and osquare and osquare:HasStairs() then return true end
 	
 	return false 
+end
+
+-- This is old function, try to get rid of it. I created a inFrontOfWindowAlt 
+function SuperSurvivor:inFrontOfWindow() 
+
+	 local cs = self.player:getCurrentSquare()
+	 local fsquare = cs:getTileInDirection(self.player:getDir());
+	 if cs and fsquare then 
+		return cs:getWindowTo(fsquare)
+	 else return nil end
 	
 end
+
 
 
 function SuperSurvivor:updateTime()
