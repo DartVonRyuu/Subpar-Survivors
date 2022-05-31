@@ -1554,6 +1554,18 @@ function SuperSurvivor:inFrontOfLockedDoor()
 		return false
 	end
 end
+function SuperSurvivor:inFrontOfLockedDoorAndIsOutside()
+
+	local door = self:inFrontOfDoor()
+
+	if (door ~= nil) and (door:isLocked() or door:isLockedByKey() or door:isBarricaded()) and (self.player:isOutside()) then
+		return true
+	else 
+		return false
+	end
+end
+
+
 
 -- since inFrontOfWindow (not alt) doesn't have this function's code
 function SuperSurvivor:inFrontOfWindowAlt() 
@@ -1578,6 +1590,16 @@ function SuperSurvivor:inFrontOfBarricadedWindowAlt()
 	local window = self:inFrontOfWindowAlt()
 
 	if (window ~= nil) and (window:isBarricaded()) then
+		return true
+	else 
+		return false
+	end
+end
+function SuperSurvivor:inFrontOfBarricadedWindowAndIsOutsideAlt()
+-- Used door locked code for this, added 'alt' to function name just to be safe for naming
+	local window = self:inFrontOfWindowAlt()
+
+	if (window ~= nil) and (window:isBarricaded()) and (self.player:isOutside()) then
 		return true
 	else 
 		return false
