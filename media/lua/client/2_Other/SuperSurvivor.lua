@@ -1544,6 +1544,16 @@ function SuperSurvivor:inFrontOfDoor()
 	 return nil 
 	
 end
+function SuperSurvivor:inFrontOfGeneralDoorAndIsOutside()
+
+	local door = self:inFrontOfDoor()
+
+	if (door ~= nil) and (self.player:isOutside()) then
+		return true
+	else 
+		return false
+	end
+end
 function SuperSurvivor:inFrontOfLockedDoor()
 
 	local door = self:inFrontOfDoor()
@@ -1590,6 +1600,16 @@ function SuperSurvivor:inFrontOfBarricadedWindowAlt()
 	local window = self:inFrontOfWindowAlt()
 
 	if (window ~= nil) and (window:isBarricaded()) then
+		return true
+	else 
+		return false
+	end
+end
+function SuperSurvivor:inFrontOfWindowAndIsOutsideAlt()
+-- Used door locked code for this, added 'alt' to function name just to be safe for naming
+	local window = self:inFrontOfWindowAlt()
+
+	if (window ~= nil) and (self.player:isOutside()) then
 		return true
 	else 
 		return false
@@ -1880,7 +1900,7 @@ function SuperSurvivor:update()
 	
 	--self.player:Say(tostring(self:isInAction()) ..",".. tostring(self.TicksSinceSquareChanged > 6) ..",".. tostring(self:inFrontOfLockedDoor()) ..",".. tostring(self:getTaskManager():getCurrentTask() ~= "Enter New Building") ..",".. tostring(self.TargetBuilding ~= nil))
 	--print( self:getName()..": "..tostring((self.TargetBuilding ~= nil)))
-	if ( (self:inFrontOfLockedDoor()) or (self:inFrontOfWindow())
+	if ( (self:inFrontOfGeneralDoorAndIsOutside()) or (self:inFrontOfWindowAndIsOutsideAlt())
 		 ) and ( self:getTaskManager():getCurrentTask() ~= "Enter New Building"
 		 ) and ( self.TargetBuilding ~= nil
 		 ) and (
