@@ -42,11 +42,13 @@ function AIManager(TaskMangerIn)
 	if(HisGroup) then CenterBaseSquare = HisGroup:getBaseCenter() end
 	
 		-------------shared ai for all -----------------------------------------------
-	
-	if (TaskMangerIn:getCurrentTask() ~= "Enter New Building") and (TaskMangerIn:getCurrentTask() ~= "Threaten") and ASuperSurvivor:isWalkingPermitted() and EnemyIsSurvivor and ASuperSurvivor:hasWeapon() and (EnemyIsSurvivorHasGun == false or ASuperSurvivor:hasGun()) and (ASuperSurvivor.LastEnemeySeen ~= nil) and (ASuperSurvivor:getDangerSeenCount() == 0) and (IHaveInjury == false) and TaskMangerIn:getCurrentTask() ~= "Pursue" then
-		if(ASuperSurvivor:Get():getModData().isHostile) and (ASuperSurvivor:isSpeaking() == false) then ASuperSurvivor:Speak(getSpeech("GonnaGetYou")) end
-		TaskMangerIn:AddToTop(PursueTask:new(ASuperSurvivor,ASuperSurvivor.LastEnemeySeen))
-	end
+
+-- Okay, so, this needs to be disabled for now. It loops between itself and the enter new building
+-- So as a result, make new code for this, that doesn't lead to looping	
+--	if (TaskMangerIn:getCurrentTask() ~= "Enter New Building") and (TaskMangerIn:getCurrentTask() ~= "Threaten") and ASuperSurvivor:isWalkingPermitted() and EnemyIsSurvivor and ASuperSurvivor:hasWeapon() and (EnemyIsSurvivorHasGun == false or ASuperSurvivor:hasGun()) and (ASuperSurvivor.LastEnemeySeen ~= nil) and (ASuperSurvivor:getDangerSeenCount() == 0) and (IHaveInjury == false) and TaskMangerIn:getCurrentTask() ~= "Pursue" then
+--		if(ASuperSurvivor:Get():getModData().isHostile) and (ASuperSurvivor:isSpeaking() == false) then ASuperSurvivor:Speak(getSpeech("GonnaGetYou")) end
+--		TaskMangerIn:AddToTop(PursueTask:new(ASuperSurvivor,ASuperSurvivor.LastEnemeySeen))
+--	end
 	
 
 		
@@ -76,11 +78,11 @@ function AIManager(TaskMangerIn)
 	end
 
 	-- THIS ONE WORKS! So far: Hostile enemies will goto the door, and just walk away after a single try!
-	if ((TaskMangerIn:getCurrentTask() == "Pursue") or (not (ASuperSurvivor:getCurrentTask() == "None"))) and (ASuperSurvivor:inFrontOfLockedDoor()) and (ASuperSurvivor:Get():isOutside()) then
+	if (TaskMangerIn:getCurrentTask() == "Pursue") and (ASuperSurvivor:inFrontOfLockedDoor()) and (ASuperSurvivor:Get():isOutside()) then
 		ASuperSurvivor:Speak("Damnit, door's barricaded!")
 		if (not (TaskMangerIn:getCurrentTask() == "Enter New Building")) and (ASuperSurvivor:Get():isOutside()) then
 			TaskMangerIn:clear()
-			TaskMangerIn:AddToTop(AttemptEntryIntoBuildingTask:new(ASuperSurvivor, ASuperSurvivor.TargetBuilding))
+			-- SuperSurvivor lua has enter new building task. this If section should ensure it working.
 		end
 	end
 
