@@ -76,19 +76,11 @@ function AIManager(TaskMangerIn)
 	end
 
 	-- THIS ONE WORKS! So far: Hostile enemies will goto the door, and just walk away after a single try!
-	if ((TaskMangerIn:getCurrentTask() == "Enter New Building") or (TaskMangerIn:getCurrentTask() == "Pursue")) and (ASuperSurvivor:inFrontOfLockedDoor()) then
+	if (TaskMangerIn:getCurrentTask() == "Pursue") or not (ASuperSurvivor:getCurrentTask() == "None") and (ASuperSurvivor:inFrontOfLockedDoor()) and (ASuperSurvivor:Get():isOutside()) then
 		ASuperSurvivor:Speak("Damnit, door's barricaded!")
 		TaskMangerIn:clear()
-		-- After clearing the pursue, get into the building maybe
-		if (TaskMangerIn:getCurrentTask() ~= "Enter New Building") and (not ASuperSurvivor:getBuildingExplored(ASuperSurvivor.TargetBuilding)) then
-			TaskMangerIn:AddToTop(AttemptEntryIntoBuildingTask:new(ASuperSurvivor, ASuperSurvivor.TargetBuilding))
-		end	
-		-- Now see if the NPC is trying to get to the building they marked explored, then if so? Remove task.
-		if (TaskMangerIn:getCurrentTask() == "Enter New Building") and (ASuperSurvivor:getBuildingExplored(ASuperSurvivor.TargetBuilding)) then
-			TaskMangerIn:clear()
-		end
-		
 	end
+
 
 
 	if ((TaskMangerIn:getCurrentTask() ~= "Attack") and (TaskMangerIn:getCurrentTask() ~= "Threaten") and not ((TaskMangerIn:getCurrentTask() == "Surender") and EnemyIsSurvivor) and (TaskMangerIn:getCurrentTask() ~= "Doctor") and (ASuperSurvivor:isInSameRoom(ASuperSurvivor.LastEnemeySeen)) and (TaskMangerIn:getCurrentTask() ~= "Flee")) and ((ASuperSurvivor:hasWeapon() and ((ASuperSurvivor:getDangerSeenCount() >= 1) or (ASuperSurvivor:isEnemyInRange(ASuperSurvivor.LastEnemeySeen)))) or (ASuperSurvivor:hasWeapon() == false and (ASuperSurvivor:getDangerSeenCount() == 1) and (not EnemyIsSurvivor))) and (IHaveInjury == false) then
