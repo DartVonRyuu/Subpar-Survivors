@@ -22,7 +22,7 @@ function FindUnlootedBuildingTask:new(superSurvivor)
 
 end
 function FindUnlootedBuildingTask:OnComplete()
-	self.parent:DebugSay("complete")
+	self.parent:DebugSay("Find Unlooted Building task - complete")
 	self.parent:setSneaking(false)
 end
 function FindUnlootedBuildingTask:isComplete()
