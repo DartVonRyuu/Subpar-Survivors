@@ -2777,7 +2777,7 @@ function SuperSurvivor:Attack(victim)
 	if (self.AtkTicks > 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
 		self.AtkTicks = self.AtkTicks - 1
 	end 
-	
+
 	-- Fixes a rare scenario where getting to loop attack
 --	if (self.AtkTicks <= 0) and (self.player:getCurrentState() == SwipeStatePlayer.instance()) then 
 --		self.AtkTicks = 3
