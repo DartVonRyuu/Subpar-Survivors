@@ -72,7 +72,7 @@ function AttemptEntryIntoBuildingTask:update()
 		self.parent:Speak("Damnit, the door is blocked off!")
 		self.parent:MarkBuildingExplored(self.parent:getBuilding())
 		self.parent:walkToDirect(outsidesquare)
-		self.TryWindow = true
+--		self.TryWindow = true
 	end
 	if (self.parent:inFrontOfBarricadedWindowAlt()) then 
 		self.parent:Speak("Windows are blocked too! Well, there's no point in staying here...")

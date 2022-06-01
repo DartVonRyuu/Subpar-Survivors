@@ -79,9 +79,9 @@ function AIManager(TaskMangerIn)
 
 	-- THIS ONE WORKS! So far: Hostile enemies will goto the door, and just walk away after a single try!
 	if (TaskMangerIn:getCurrentTask() == "Pursue") and (ASuperSurvivor:inFrontOfLockedDoor()) and (ASuperSurvivor:Get():isOutside()) then
-		ASuperSurvivor:Speak("Damnit, door's barricaded!")
-		if (not (TaskMangerIn:getCurrentTask() == "Enter New Building")) and (ASuperSurvivor:Get():isOutside()) then
 			TaskMangerIn:clear()
+		if ((TaskMangerIn:getCurrentTask() == "Enter New Building")) and (ASuperSurvivor:Get():isOutside()) then
+			--	TaskMangerIn:clear()
 			-- SuperSurvivor lua has enter new building task. this If section should ensure it working.
 		end
 	end
