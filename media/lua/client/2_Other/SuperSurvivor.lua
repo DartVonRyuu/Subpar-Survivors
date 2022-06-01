@@ -1900,7 +1900,7 @@ function SuperSurvivor:update()
 	
 	--self.player:Say(tostring(self:isInAction()) ..",".. tostring(self.TicksSinceSquareChanged > 6) ..",".. tostring(self:inFrontOfLockedDoor()) ..",".. tostring(self:getTaskManager():getCurrentTask() ~= "Enter New Building") ..",".. tostring(self.TargetBuilding ~= nil))
 	--print( self:getName()..": "..tostring((self.TargetBuilding ~= nil)))
-	if ( (self:inFrontOfGeneralDoorAndIsOutside()) or (self:inFrontOfWindowAndIsOutsideAlt())
+	if ( (self:inFrontOfLockedDoorAndIsOutside()) or (self:inFrontOfWindowAndIsOutsideAlt())
 		 ) and ( self:getTaskManager():getCurrentTask() ~= "Enter New Building"
 		 ) and ( self.TargetBuilding ~= nil
 		 ) and (
@@ -1915,8 +1915,10 @@ function SuperSurvivor:update()
 		) or (self:getCurrentTask() == "Pursue")
 	) then
 		print(self:getName().." Attempt Entry1")
+		self:getTaskManager():clear()
 		self:getTaskManager():AddToTop(AttemptEntryIntoBuildingTask:new(self, self.TargetBuilding))
 		self.TicksSinceSquareChanged = 0
+		self:DebugSay("Cleared Tasks, Trying to enter building again")
 	end
 	--self.player:Say(tostring(self:isInAction()) ..",".. tostring(self.TicksSinceSquareChanged > 6) ..",".. tostring((self:inFrontOfWindow())))
 	
