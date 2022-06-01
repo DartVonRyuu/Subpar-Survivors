@@ -72,6 +72,7 @@ function AttemptEntryIntoBuildingTask:update()
 		self.parent:Speak("Damnit, the door is blocked off!")
 		self.parent:MarkBuildingExplored(self.parent:getBuilding())
 		self.parent:walkToDirect(outsidesquare)
+		self.TargetSquare = nil
 --		self.TryWindow = true
 	end
 	if (self.parent:inFrontOfBarricadedWindowAlt()) then 
@@ -206,8 +207,12 @@ function AttemptEntryIntoBuildingTask:update()
 				
 				local distanceToDoor = getDistanceBetween(self.parent.player,doorSquare)
 				
-				if (distanceToDoor > 1.0) then 
+				if (distanceToDoor > 1.0) and not (self.parent:inFrontOfLockedDoor()) then 
 					self.parent:walkToDirect(self.Door)
+					if (self.parent:inFrontOfLockedDoor()) then
+						self.parent:walkToDirect(self.Window)
+					end
+					
 					if(debugOutput) then print( self.parent:getName() .. " " .."walking to door") end
 				else
 					
@@ -240,7 +245,8 @@ function AttemptEntryIntoBuildingTask:update()
 			end
 	
 		else
-			self:giveUpOnBuilding()
+			self.parent:walkToDirect(self.Window)
+			--self:giveUpOnBuilding()
 		end
 		
 	end
