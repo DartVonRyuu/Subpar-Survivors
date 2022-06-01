@@ -37,7 +37,7 @@ function PursueTask:OnComplete()
 	if(self.SwitchBackToMele) then self.parent:reEquipMele() end
 end
 
-function PursueTask:isComplete() -- This is the reason why a single hit to a hostile is making them run away after a single hit. Needs fixing
+function PursueTask:isComplete()
 	if (not self.Target) or self.Target:isDead() or (self.parent:HasInjury()) or self.parent:isEnemy( self.Target) == false then return true
 	else return self.Complete end
 end
