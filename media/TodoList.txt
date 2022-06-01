@@ -1,0 +1,16 @@
+Todo List
+
+[Bugfixes Todo List]
+[]	- When hit by anything ONCE, npc runs away
+[]	- Get NPCs to always check window after checking door
+[]	- Make NPCs actually require items to heal
+[]	- Further adjust NPC attack speeds
+[]	- 
+[]	- 
+[]	- 
+[]	- 
+[]	- 
+[]	- 
+[]	- 
+[]	- 
+[]	- 
