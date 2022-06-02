@@ -91,7 +91,10 @@ function AIManager(TaskMangerIn)
 	if ((TaskMangerIn:getCurrentTask() ~= "Attack") and (TaskMangerIn:getCurrentTask() ~= "Threaten") and not ((TaskMangerIn:getCurrentTask() == "Surender") and EnemyIsSurvivor) and (TaskMangerIn:getCurrentTask() ~= "Doctor") and (ASuperSurvivor:isInSameRoom(ASuperSurvivor.LastEnemeySeen)) and (TaskMangerIn:getCurrentTask() ~= "Flee")) and ((ASuperSurvivor:hasWeapon() and ((ASuperSurvivor:getDangerSeenCount() >= 1) or (ASuperSurvivor:isEnemyInRange(ASuperSurvivor.LastEnemeySeen)))) or (ASuperSurvivor:hasWeapon() == false and (ASuperSurvivor:getDangerSeenCount() == 1) and (not EnemyIsSurvivor))) and (IHaveInjury == false) then
 		--ASuperSurvivor:Speak( ASuperSurvivor:getName()..": need to attack")
 		if(ASuperSurvivor.player ~= nil) and (ASuperSurvivor.player:getModData().isRobber) and (not ASuperSurvivor.player:getModData().hitByCharacter) and EnemyIsSurvivor and (not EnemySuperSurvivor.player:getModData().dealBreaker) then TaskMangerIn:AddToTop(ThreatenTask:new(ASuperSurvivor,EnemySuperSurvivor,"Scram"))
-		else TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) end
+		else 
+		ASuperSurvivor:Speak("I was given attack task")
+		TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
+		end
 	end
 	-- find safe place if injured and enemies near
 	if (TaskMangerIn:getCurrentTask() ~= "Find Building") and (TaskMangerIn:getCurrentTask() ~= "Flee") and (IHaveInjury) and (ASuperSurvivor:getDangerSeenCount() > 0) then
@@ -486,7 +489,11 @@ function AIManager(TaskMangerIn)
 	
 	if(ASuperSurvivor:getAIMode() == "Random Solo") and (TaskMangerIn:getCurrentTask() ~= "Listen") and (TaskMangerIn:getCurrentTask() ~= "Take Gift") then -- solo random survivor AI flow	
 
-		if(TaskMangerIn:getCurrentTask() == "None") and (ASuperSurvivor.TargetBuilding ~= nil) and (not ASuperSurvivor:getBuildingExplored(ASuperSurvivor.TargetBuilding)) then
+		if
+		  (TaskMangerIn:getCurrentTask() == "None") and 
+		  (ASuperSurvivor.TargetBuilding ~= nil) 	and 
+		  (not ASuperSurvivor:getBuildingExplored(ASuperSurvivor.TargetBuilding)) 
+		then
 			TaskMangerIn:AddToTop(AttemptEntryIntoBuildingTask:new(ASuperSurvivor, ASuperSurvivor.TargetBuilding))
 		elseif(TaskMangerIn:getCurrentTask() == "None") then
 			TaskMangerIn:AddToTop(FindUnlootedBuildingTask:new(ASuperSurvivor))
@@ -502,41 +509,55 @@ function AIManager(TaskMangerIn)
 				TaskMangerIn:AddToTop(LootCategoryTask:new(ASuperSurvivor,ASuperSurvivor.TargetBuilding,"Food",1))
 			end
 		end
-		if (SurvivorBases) and (ASuperSurvivor:getBaseBuilding() == nil) and (ASuperSurvivor:getBuilding()) and (TaskMangerIn:getCurrentTask() ~= "First Aide") and (TaskMangerIn:getCurrentTask() ~= "Attack") and (TaskMangerIn:getCurrentTask() ~= "Barricade Building") and (ASuperSurvivor:hasWeapon())  and (ASuperSurvivor:hasFood()) then
-			TaskMangerIn:clear()
-			ASuperSurvivor:setBaseBuilding(ASuperSurvivor:getBuilding())
-			TaskMangerIn:AddToTop(WanderInBuildingTask:new(ASuperSurvivor,ASuperSurvivor:getBuilding()))
-			TaskMangerIn:AddToTop(LockDoorsTask:new(ASuperSurvivor,true))
-			TaskMangerIn:AddToTop(BarricadeBuildingTask:new(ASuperSurvivor))
-			ASuperSurvivor:Speak("This will be my base.")
-			print(ASuperSurvivor:getName() .. " making base")
-			local GroupId = SSGM:GetGroupIdFromSquare(ASuperSurvivor:Get():getCurrentSquare())
-			--ASuperSurvivor:Speak(tostring(GroupId))
-			if(GroupId == -1) then -- if the base this npc is gonna stay in is not declared as another base then they set it as thier base.
-				print("New base")
-				local nGroup = SSGM:newGroup()					
-				nGroup:addMember(ASuperSurvivor,"Leader")
-				local def = ASuperSurvivor:getBuilding():getDef()
-				local bounds = {def:getX()-1,(def:getX() + def:getW()+1 ), def:getY()-1,(def:getY() + def:getH()+1),0}
-				nGroup:setBounds(bounds)
-				--ASuperSurvivor:Speak(tostring(nGroup:getID()))
-			elseif(GroupId ~= SSM:Get(0):getGroupID()) then
-				local OwnerGroup = SSGM:Get(GroupId)
-				local LeaderID = OwnerGroup:getLeader()
-				print("Joining g:" .. GroupId .. " l:" .. LeaderID)
-				if(LeaderID ~= 0) then
-					OwnerGroup:addMember(ASuperSurvivor,"Worker")
-					ASuperSurvivor:Speak("Please let me stay here")
-					local LeaderObj = SSM:Get(LeaderID)
-					if(LeaderObj) then
-						LeaderObj:Speak("Welcome to our Group")
-						print("Accepted by " .. LeaderObj:getName())
+		if (SurvivorBases) and (ASuperSurvivor:getBaseBuilding() == nil) and (ASuperSurvivor:getBuilding()) and (ASuperSurvivor:hasWeapon()) and (ASuperSurvivor:hasFood()) 
+			and not
+			(
+				(TaskMangerIn:getCurrentTask() == "Barricade Building") or
+				(TaskMangerIn:getCurrentTask() == "First Aide") or
+				(TaskMangerIn:getCurrentTask() == "Attack") or
+				(TaskMangerIn:getCurrentTask() == "Pursue") or
+				(TaskMangerIn:getCurrentTask() == "Lock Doors")
+			) 
+			and
+			(
+				(not (ASuperSurvivor:Get():isOutside())) and
+				(not (getSpecificPlayer(0):isOutside())) and
+					 (DistanceBetweenMainPlayer<=8)
+					--	^ To make sure the player is generally in the same building as the npc
+			)
+			then
+				TaskMangerIn:clear()
+				ASuperSurvivor:setBaseBuilding(ASuperSurvivor:getBuilding())
+				TaskMangerIn:AddToTop(BarricadeBuildingTask:new(ASuperSurvivor))
+				TaskMangerIn:AddToTop(LockDoorsTask:new(ASuperSurvivor,true))
+				TaskMangerIn:AddToTop(WanderInBuildingTask:new(ASuperSurvivor,ASuperSurvivor:getBuilding()))
+				ASuperSurvivor:Speak("This will be my base.")
+				print(ASuperSurvivor:getName() .. " making base")
+				local GroupId = SSGM:GetGroupIdFromSquare(ASuperSurvivor:Get():getCurrentSquare())
+				--ASuperSurvivor:Speak(tostring(GroupId))
+				if(GroupId == -1) then -- if the base this npc is gonna stay in is not declared as another base then they set it as thier base.
+					print("New base")
+					local nGroup = SSGM:newGroup()					
+					nGroup:addMember(ASuperSurvivor,"Leader")
+					local def = ASuperSurvivor:getBuilding():getDef()
+					local bounds = {def:getX()-1,(def:getX() + def:getW()+1 ), def:getY()-1,(def:getY() + def:getH()+1),0}
+					nGroup:setBounds(bounds)
+					--ASuperSurvivor:Speak(tostring(nGroup:getID()))
+				elseif(GroupId ~= SSM:Get(0):getGroupID()) then
+					local OwnerGroup = SSGM:Get(GroupId)
+					local LeaderID = OwnerGroup:getLeader()
+					print("Joining g:" .. GroupId .. " l:" .. LeaderID)
+					if(LeaderID ~= 0) then
+						OwnerGroup:addMember(ASuperSurvivor,"Worker")
+						ASuperSurvivor:Speak("Please let me stay here")
+						local LeaderObj = SSM:Get(LeaderID)
+						if(LeaderObj) then
+							LeaderObj:Speak("Welcome to our Group")
+							print("Accepted by " .. LeaderObj:getName())
+						end
 					end
 				end
 			end
-			
-		end
-		
 		
 		if ((SurvivorBases) and (ASuperSurvivor:isStarving()) or (ASuperSurvivor:isDyingOfThirst())) and (ASuperSurvivor:getBaseBuilding() ~= nil) then  -- leave group and look for food if starving
 			-- random survivor in base is starving - reset so he goes back out looking for food and re base there
