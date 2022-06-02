@@ -74,6 +74,10 @@ end
 
 function ThreatenTask:update()
 	
+	if (self.parent:IsNpcIndoorsAndPlayerIsOutside() or self.parent:IsNpcOutsideAndPlayerIsIndoors()) then 
+		self.Aite:getTaskManager():clear()
+	return false end
+	
 	if(not self:isValid()) or (self:isComplete()) then return false end
 	 self.theDistance = getDistanceBetween(self.Aite, self.parent.player)
 	
