@@ -68,23 +68,53 @@ function AttemptEntryIntoBuildingTask:update()
 	if(not self:isValid()) then return false end
 
 	
-	if (self.parent:inFrontOfLockedDoor()) then
+	if (self.parent:inFrontOfLockedDoor() and (self.Door ~= nil)) then
 		self.parent:Speak("Damnit, the door is blocked off!")
 		self.parent:MarkBuildingExplored(self.parent:getBuilding())
 		self.parent:walkToDirect(outsidesquare)
-		self.TargetSquare = nil
---		self.TryWindow = true
+		self.Door = nil
+		self.TryWindow = true
 	end
 	if (self.parent:inFrontOfBarricadedWindowAlt()) then 
 		self.parent:Speak("Windows are blocked too! Well, there's no point in staying here...")
 		self.parent:MarkBuildingExplored(self.parent:getBuilding())
-		self.parent:walkToDirect(outsidesquare)
 		self:giveUpOnBuilding() 
 	end
+	
+	if(self.parent:isInAction() == false) then
+		if(self.TargetSquare == nil) then -- if the NPC does NOT find a door/window, then it will find one
+			self.TargetSquare = getRandomFreeBuildingSquare(self.parent.TargetBuilding) 
+		end
+
+		if(self.TargetSquare ~= nil) then -- if the NPC does find a door/window
+			-- WINDOW SECTION
+			if(self.Window == nil) and (self.TryWindow == true) then
+				self.Window = getCloseWindow(self.parent.TargetBuilding,self.parent.player)
+				self.Door = nil
+			end
+
+			if(self.Window ~= nil) and (self.TryWindow == true) and (self.parent:getWalkToAttempt(self.TargetSquare) < 10) then
+				self.parent:walkTo(self.Window)
+				self.parent:Speak("Trying Window!")
+			end
+		end
+
+	end
+
+
+
 	-- Let the rest of the code do whatever, but make it where if the window is at least barricaded, 
 	-- then make it where the npc actually gives up raiding. Otherwise, the npc will break window like normal. 
 	-- But now ^ that code above manages most of the work. 
 	
+
+
+
+
+
+
+
+
 	if(self.parent:getSeenCount() == 0) then self.parent:setSneaking(true) end
 	
 	if(self.parent:getDangerSeenCount() > 1) or (self.ClimbThroughWindowAttempts > 4) then 
@@ -94,44 +124,49 @@ function AttemptEntryIntoBuildingTask:update()
 	
 	if(self.parent:isInAction() == false) then
 		
-		if(self.TargetSquare == nil) then self.TargetSquare = getRandomFreeBuildingSquare(self.parent.TargetBuilding) end
+--		if(self.TargetSquare == nil) then self.TargetSquare = getRandomFreeBuildingSquare(self.parent.TargetBuilding) end
 		
 		if(self.TargetSquare ~= nil) then
 		
 			local door = self.parent:inFrontOfDoor()
 			
-			if self.TryWindow == false and (door ~= nil) and (door:isLocked() or door:isLockedByKey() or door:isBarricaded())  then
-				--if (not self.parent:isTargetBuildingClaimed(self.parent.TargetBuilding)) then
-				--	-- little pig, little pig
-				--	door:setIsLocked(false)
-				--	door:setLockedByKey(false)
-				--else
-					self.TryWindow = true
-					self.Door = door
-				--end
-			end
+--			if self.TryWindow == false and (door ~= nil) and (door:isLocked() or door:isLockedByKey() or door:isBarricaded())  then
+--				--if (not self.parent:isTargetBuildingClaimed(self.parent.TargetBuilding)) then
+--				--	-- little pig, little pig
+--				--	door:setIsLocked(false)
+--				--	door:setLockedByKey(false)
+--				--else
+--					self.TryWindow = true
+--					self.Door = door
+--				--end
+--			end
 			
-			if(self.parent:inFrontOfWindow()) then
-				self.TryWindow = true
-			end
+--			if(self.parent:inFrontOfWindow()) then
+--				self.TryWindow = true
+--			end
 		
 			
 			if not self.TryWindow and not self.TryBreakDoor then
 				if(debugOutput) then print( self.parent:getName() .. " " .."not try window") end
-				if(self.parent:getWalkToAttempt(self.TargetSquare) < 10) then
-					if(debugOutput) then print( self.parent:getName() .. " " .."trying to get to square inside") end
-				if(debugOutput) then 	self.parent:Speak(tostring(self.parent:getWalkToAttempt(self.TargetSquare))) end
-					self.parent:walkTo(self.TargetSquare)
-					self.parent:Speak("Trying Window!")
-				else
-					self.TryWindow = true
-				end
+
+--				if(self.parent:getWalkToAttempt(self.TargetSquare) < 10) then
+--					if(debugOutput) then 
+--						print( self.parent:getName() .. " " .."trying to get to square inside") 
+--					end
+--					if(debugOutput) then 	
+--						self.parent:Speak(tostring(self.parent:getWalkToAttempt(self.TargetSquare))) 
+--					end
+--					self.parent:walkTo(self.TargetSquare)
+--					self.parent:Speak("Trying Window!")
+--				else
+--					self.TryWindow = true
+--				end
 				
 			elseif self.TryWindow then
 				if(debugOutput) then print( self.parent:getName() .. " " .."try window true") end
-				if(self.Window == nil) then
-					self.Window = getCloseWindow(self.parent.TargetBuilding,self.parent.player)
-				end
+--				if(self.Window == nil) then
+--					self.Window = getCloseWindow(self.parent.TargetBuilding,self.parent.player)
+--				end
 				
 				if(not self.Window) then
 					
@@ -152,6 +187,7 @@ function AttemptEntryIntoBuildingTask:update()
 					local distanceToWindow = getDistanceBetween(self.Window,self.parent.player)
 					
 					if distanceToWindow > 1.0 then
+					-- hmm
 						local outsidesquare = getOutsideSquare(self.Window, self.parent.TargetBuilding)
 						if(outsidesquare == nil) or (self.parent:getWalkToAttempt(outsidesquare) > 10) then 
 							
@@ -163,6 +199,7 @@ function AttemptEntryIntoBuildingTask:update()
 							
 						end
 						self.parent:walkToDirect(outsidesquare)
+						self.parent:Speak("Walkingto 'outsidesquare'")
 					else
 						self.parent.player:faceThisObject(self.Window)
 						if(self.Window:isSmashed() == false) and (self.Window:IsOpen() == false) then	
@@ -208,17 +245,14 @@ function AttemptEntryIntoBuildingTask:update()
 				local distanceToDoor = getDistanceBetween(self.parent.player,doorSquare)
 				
 				if (distanceToDoor > 1.0) and not (self.parent:inFrontOfLockedDoor()) then 
-					self.parent:walkToDirect(self.Door)
-					if (self.parent:inFrontOfLockedDoor()) then
-						self.parent:walkToDirect(self.Window)
-					end
-					
+					self.parent:walkToDirect(self.Door)			
 					if(debugOutput) then print( self.parent:getName() .. " " .."walking to door") end
 				else
 					
 					if(self.BreakInAttempts > 10) then
 						if(debugOutput) then print( self.parent:getName() .. " " .."here i am23") end
-						self:giveUpOnBuilding()
+						-- self:giveUpOnBuilding()
+						self.parent:walkToDirect(outsidesquare)
 						print("gave up on building because: could not seem to break down door")
 					
 					else
@@ -245,7 +279,7 @@ function AttemptEntryIntoBuildingTask:update()
 			end
 	
 		else
-			self.parent:walkToDirect(self.Window)
+			self.parent:walkToDirect(outsidesquare)
 			--self:giveUpOnBuilding()
 		end
 		
