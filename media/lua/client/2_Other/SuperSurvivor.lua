@@ -16,7 +16,7 @@ function SuperSurvivor:new(isFemale,square)
 	setmetatable(o, self)
 	self.__index = self
 	
-	o.DebugMode = false
+	o.DebugMode = true
 	o.NumberOfBuildingsLooted = 0
 	o.AttackRange = 0.5
 	o.UsingFullAuto = false
@@ -145,7 +145,7 @@ function SuperSurvivor:newLoad(ID,square)
 	o.UsingFullAuto = false
 	o.GroupBraveryBonus = 0
 	o.GroupBraveryUpdatedTicks = 0
-	o.DebugMode = false
+	o.DebugMode = true
 	o.NumberOfBuildingsLooted = 0
 	o.WaitTicks = 0
 	o.VisionTicks = 0
@@ -219,7 +219,7 @@ function SuperSurvivor:newSet(player)
 		
 	o.AttackRange = 0.5
 	o.UsingFullAuto = false
-	o.DebugMode = false
+	o.DebugMode = true
 	o.NumberOfBuildingsLooted = 0
 	o.GroupBraveryBonus = 0
 	o.GroupBraveryUpdatedTicks = 0
@@ -1464,7 +1464,7 @@ function SuperSurvivor:walkTo(square)
 		if (door ~= nil) and (door:isLocked() or door:isLockedByKey() or door:isBarricaded()) then
 			local building = door:getOppositeSquare():getBuilding()
 			--if (builing == nil) or (not self.parent:isTargetBuildingClaimed(builing)) then
-				self:DebugSay("little pig, little pig")
+			--	self:DebugSay("little pig, little pig")
 			--	door:setIsLocked(false)
 			--	door:setLockedByKey(false)
 			--end
@@ -1574,6 +1574,42 @@ function SuperSurvivor:inFrontOfLockedDoorAndIsOutside()
 		return false
 	end
 end
+
+
+function SuperSurvivor:IsNpcAndPlayerAreOutside() -- If NPC and the real player
+	if (self.player:isOutside()) and (getSpecificPlayer(0):isOutside()) 
+	then
+		return true
+	else 
+		return false
+	end
+end
+function SuperSurvivor:IsNpcAndPlayerAreInside() -- If NPC and the real player
+	if (not self.player:isOutside()) and (not getSpecificPlayer(0):isOutside()) 
+	then
+		return true
+	else 
+		return false
+	end
+end
+function SuperSurvivor:IsNpcIndoorsAndPlayerIsOutside() -- If NPC and the real player
+	if (not self.player:isOutside()) and (getSpecificPlayer(0):isOutside()) 
+	then
+		return true
+	else 
+		return false
+	end
+end
+function SuperSurvivor:IsNpcOutsideAndPlayerIsIndoors() -- If NPC and the real player
+	if (self.player:isOutside()) and (not getSpecificPlayer(0):isOutside()) 
+	then
+		return true
+	else 
+		return false
+	end
+end
+
+
 
 
 
@@ -2769,12 +2805,11 @@ end
 -- TaskMangerIn:getTask():ForceFinish() Hold this
 
 function SuperSurvivor:Attack(victim)
-	
-	self:Speak("Attacking in "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
+	-- test to see if turning off the returnfalse temp fixes attack loops
 
 	-- Don't use a return False on this IF statement, that causes the if statements below get ignored 
 	-- AtkTicks will start counting down to 0 ONLY if not already attacking, if not 0, or not has fallen on the ground and also not being attacked by player
-	if (self.AtkTicks > 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
+	if (self.AtkTicks > 0) and not (self.player:getCurrentState() == SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
 		self.AtkTicks = self.AtkTicks - 1
 	end 
 
@@ -2806,11 +2841,16 @@ function SuperSurvivor:Attack(victim)
 		
 		--print(self:getName().."t walking2")
 --		Using updated StopMovement() instead 		
-		self:StopWalk()
+		if (getDistanceBetween(self.player,victim) > 0.5) then
+			self:StopWalk()
+			self.player:faceThisObject(victim);
+			self.player:NPCSetAiming(false)
+			self.player:NPCSetAttack(false)
+		else
+			self.player:NPCSetAiming(true)
+			self.player:NPCSetAttack(true)
+		end
 
---		self:StopMovement()
-		self.player:faceThisObject(victim);
-		
 		if(self.UsingFullAuto) then self.TriggerHeldDown = true end
 		if(self.player ~= nil) then 
 			-- Distance divides by 2 (half) so there is ABSOLUTELY no way the npc will swing at the air
@@ -2825,26 +2865,19 @@ function SuperSurvivor:Attack(victim)
 			end
 
 			-- Should reset timer when chasing entity, Change ~= to ==
-			if (getDistanceBetween(self.player,victim) > minrange) and (self.AtkTicks < 1) and (self:getTaskManager():getCurrentTask() == "Pursue") then 
+			if (getDistanceBetween(self.player,victim) > minrange) and (self.AtkTicks < 1) then 
 				self.AtkTicks = 1
 			end
 
-			self.player:NPCSetAiming(true)
-			self.player:NPCSetAttack(true)
-	
--- Removed the 'shove' machanic, because it's possible for the npc to just spam this move no matter what.as
---			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks < 0)  then	
+		-- Removed the 'shove' machanic, because it's possible for the npc to just spam this move no matter what.as
 			if(distance < minrange) and (self.AtkTicks <= 0)  then
-				victim:Hit(weapon, self.player, damage, false, 1.0, false) -- Line moved to here			
---				self:Speak("Shove!"..tostring(distance).."/"..tostring(minrange))
---				victim:Hit(weapon, self.player, damage, true, 1.0, false)
---			else
---				if (self.AtkTicks < 0) then
---					self:Speak("Attack!"..tostring(distance).."/"..tostring(minrange))
---					victim:Hit(weapon, self.player, damage, false, 1.0, false)
---				end
+				self:Speak("I hit you! "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
+				victim:Hit(weapon, self.player, damage, false, 1.0, false) -- Line moved to here	
+				self.AtkTicks = self.AtkTicks + 1
+			else
+				self:Speak("I will hit you in "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
+				self.AtkTicks = self.AtkTicks - 1
 			end
-			
 		end
 	else
 		local pwep = self.player:getPrimaryHandItem()
