@@ -5,7 +5,7 @@ Todo List
 []	- Get NPCs to always check window after checking door
 []	- Make NPCs actually require items to heal
 []	- Further adjust NPC attack speeds
-[]	- 
+[]	- If Hostile & Player(hostile) or Zombie near && Entering building, then do fight
 []	- 
 []	- 
 []	- 
