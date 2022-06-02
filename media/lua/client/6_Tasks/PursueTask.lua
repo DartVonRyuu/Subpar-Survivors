@@ -54,7 +54,7 @@ function PursueTask:update()
 
 -- self.parent:MarkBuildingExplored() and self.parent:inFrontOfLockedDoor() self.parent:MarkBuildingExplored()
 	if (self.TargetSS:getBuilding()~= nil) and (self.parent:inFrontOfLockedDoor()) then
-		self.parent:Speak("I'm in front of a locked door")
+--		self.parent:Speak("I'm in front of a locked door")
 		self.parent:MarkBuildingExplored(self.parent:getBuilding())
 		-- Since the tasks switch between this and AttemptEntryIntoBuilding, just make it where if this if statment = true, end it.
 	else
