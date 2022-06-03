@@ -73,9 +73,11 @@ function ThreatenTask:dealComplete()
 end
 
 function ThreatenTask:update()
-	
-	if (self.parent:IsNpcIndoorsAndPlayerIsOutside() or self.parent:IsNpcOutsideAndPlayerIsIndoors()) then 
+	if ((self.parent:inFrontOfGeneralDoorAndIsOutside()) and (self.parent:IsNpcAndPlayerAreOutside())) then 
 		self.Aite:getTaskManager():clear()
+		self.parent:AddToTop_FindUnlootedBuildingTask()
+		self.parent:AddToTop_BuildingAttemptTask()
+		self.parent:AddToTop_FleeFromHereTask()
 	return false end
 	
 	if(not self:isValid()) or (self:isComplete()) then return false end
@@ -110,6 +112,7 @@ function ThreatenTask:update()
 					self.SquareAtThreat = self.Aite.player:getCurrentSquare()
 					
 					if self.Aite.player:isLocalPlayer() == false then
+						ASuperSurvivor:Speak("ClearTask Section d2")
 						self.Aite:StopWalk()
 						self.Aite:getTaskManager():clear()
 						self.Aite:getTaskManager():AddToTop(FleeFromHereTask:new(self.parent, self.Aite.player:getCurrentSquare()))	
@@ -125,7 +128,7 @@ function ThreatenTask:update()
 		self.parent:walkToDirect(cs)
 	
 			
-		self.parent:DebugSay("walking close to threaten:"..tostring(self.theDistance))
+		--self.parent:DebugSay("walking close to threaten:"..tostring(self.theDistance))
 		--self.parent:Speak("walking close to attack:"..tostring(self.theDistance))
 	else
 		self.parent:DebugSay("ThreatenTask:update - something is wrong")

@@ -71,6 +71,7 @@ function AIManager(TaskMangerIn)
 				and not ASuperSurvivor:isInGroup(getSpecificPlayer(0)) 
 				and (facingResult > 0.95 ) 
 				and (DistanceBetweenMainPlayer < 6)) then
+			ASuperSurvivor:Speak("ClearTask Section A2")
 			TaskMangerIn:clear()
 			TaskMangerIn:AddToTop(SurenderTask:new(ASuperSurvivor, SSM:Get(0)))
 			return TaskMangerIn
@@ -79,6 +80,7 @@ function AIManager(TaskMangerIn)
 
 	-- THIS ONE WORKS! So far: Hostile enemies will goto the door, and just walk away after a single try!
 	if (TaskMangerIn:getCurrentTask() == "Pursue") and (ASuperSurvivor:inFrontOfLockedDoor()) and (ASuperSurvivor:Get():isOutside()) then
+			ASuperSurvivor:Speak("ClearTask Section A3")
 			TaskMangerIn:clear()
 		if ((TaskMangerIn:getCurrentTask() == "Enter New Building")) and (ASuperSurvivor:Get():isOutside()) then
 			--	TaskMangerIn:clear()
@@ -88,12 +90,49 @@ function AIManager(TaskMangerIn)
 
 
 
-	if ((TaskMangerIn:getCurrentTask() ~= "Attack") and (TaskMangerIn:getCurrentTask() ~= "Threaten") and not ((TaskMangerIn:getCurrentTask() == "Surender") and EnemyIsSurvivor) and (TaskMangerIn:getCurrentTask() ~= "Doctor") and (ASuperSurvivor:isInSameRoom(ASuperSurvivor.LastEnemeySeen)) and (TaskMangerIn:getCurrentTask() ~= "Flee")) and ((ASuperSurvivor:hasWeapon() and ((ASuperSurvivor:getDangerSeenCount() >= 1) or (ASuperSurvivor:isEnemyInRange(ASuperSurvivor.LastEnemeySeen)))) or (ASuperSurvivor:hasWeapon() == false and (ASuperSurvivor:getDangerSeenCount() == 1) and (not EnemyIsSurvivor))) and (IHaveInjury == false) then
+	if (
+		 (ASuperSurvivor:isInSameRoom(ASuperSurvivor.LastEnemeySeen)) and 
+		 (TaskMangerIn:getCurrentTask() ~= "Attack") and 
+		 (TaskMangerIn:getCurrentTask() ~= "Threaten") and 
+		 (TaskMangerIn:getCurrentTask() ~= "Doctor") and 
+		 (TaskMangerIn:getCurrentTask() ~= "Flee")
+		) and not 
+			((TaskMangerIn:getCurrentTask() == "Surender") and EnemyIsSurvivor) and 
+		(
+			(ASuperSurvivor:hasWeapon() and 
+				(
+					(ASuperSurvivor:getDangerSeenCount() >= 1) or 
+					(ASuperSurvivor:isEnemyInRange(ASuperSurvivor.LastEnemeySeen))
+				)
+			) or (
+				 	(ASuperSurvivor:hasWeapon() == false) and 
+				 	(ASuperSurvivor:getDangerSeenCount() == 1) and 
+				 	(not EnemyIsSurvivor)
+				 )
+		) and (IHaveInjury == false) 
+	then
+
+-- 	 (TaskMangerIn:getCurrentTask() ~= "Pursue"))
+--	 (TaskMangerIn:getCurrentTask() ~= "Attack")
+
 		--ASuperSurvivor:Speak( ASuperSurvivor:getName()..": need to attack")
-		if(ASuperSurvivor.player ~= nil) and (ASuperSurvivor.player:getModData().isRobber) and (not ASuperSurvivor.player:getModData().hitByCharacter) and EnemyIsSurvivor and (not EnemySuperSurvivor.player:getModData().dealBreaker) then TaskMangerIn:AddToTop(ThreatenTask:new(ASuperSurvivor,EnemySuperSurvivor,"Scram"))
+		if(ASuperSurvivor.player ~= nil) and (ASuperSurvivor.player:getModData().isRobber) and (not ASuperSurvivor.player:getModData().hitByCharacter) and EnemyIsSurvivor and (not EnemySuperSurvivor.player:getModData().dealBreaker) then 
+			TaskMangerIn:AddToTop(ThreatenTask:new(ASuperSurvivor,EnemySuperSurvivor,"Scram"))
 		else 
-		ASuperSurvivor:Speak("I was given attack task")
-		TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
+			if (TaskMangerIn:getCurrentTask() ~= "Attack") then
+				-- If not attack task & entity is close by, then don't run
+				if (ASuperSurvivor:NpcIsOneMeterFromEntity()) then
+					ASuperSurvivor:Speak("Walking / attacking task!")
+					TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
+					ASuperSurvivor:setRunning(false)
+				end
+				-- If not attack task & entity is NOT close by, then DO run
+				if not (ASuperSurvivor:NpcIsOneMeterFromEntity()) then
+					ASuperSurvivor:Speak("Running / attacking task!")
+					TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
+					ASuperSurvivor:setRunning(true)
+				end
+			end
 		end
 	end
 	-- find safe place if injured and enemies near
@@ -120,6 +159,7 @@ function AIManager(TaskMangerIn)
 			local group = SSGM:Get(ASuperSurvivor:getGroupID())
 			group:removeMember(ASuperSurvivor:getID())
 		end
+		ASuperSurvivor:Speak("ClearTask Section A1")
 		ASuperSurvivor:getTaskManager():clear()
 		if (ASuperSurvivor:Get():getStats():getHunger() > 0.40) then ASuperSurvivor:Get():getStats():setHunger(0.40) end
 		if (ASuperSurvivor:Get():getStats():getThirst() > 0.40) then ASuperSurvivor:Get():getStats():setThirst(0.40) end
@@ -489,15 +529,15 @@ function AIManager(TaskMangerIn)
 	
 	if(ASuperSurvivor:getAIMode() == "Random Solo") and (TaskMangerIn:getCurrentTask() ~= "Listen") and (TaskMangerIn:getCurrentTask() ~= "Take Gift") then -- solo random survivor AI flow	
 
-		if
-		  (TaskMangerIn:getCurrentTask() == "None") and 
-		  (ASuperSurvivor.TargetBuilding ~= nil) 	and 
-		  (not ASuperSurvivor:getBuildingExplored(ASuperSurvivor.TargetBuilding)) 
-		then
-			TaskMangerIn:AddToTop(AttemptEntryIntoBuildingTask:new(ASuperSurvivor, ASuperSurvivor.TargetBuilding))
-		elseif(TaskMangerIn:getCurrentTask() == "None") then
-			TaskMangerIn:AddToTop(FindUnlootedBuildingTask:new(ASuperSurvivor))
-		end
+--		if
+--		  (TaskMangerIn:getCurrentTask() == "None") and 
+--		  (ASuperSurvivor.TargetBuilding ~= nil) 	and 
+--		  (not ASuperSurvivor:getBuildingExplored(ASuperSurvivor.TargetBuilding)) 
+--		then
+--			TaskMangerIn:AddToTop(AttemptEntryIntoBuildingTask:new(ASuperSurvivor, ASuperSurvivor.TargetBuilding))
+--		elseif(TaskMangerIn:getCurrentTask() == "None") then
+--			TaskMangerIn:AddToTop(FindUnlootedBuildingTask:new(ASuperSurvivor))
+--		end
 		
 		if(ASuperSurvivor.TargetBuilding ~= nil) or (ASuperSurvivor:inUnLootedBuilding()) then
 			if ASuperSurvivor.TargetBuilding == nil then ASuperSurvivor.TargetBuilding = ASuperSurvivor:getBuilding() end
@@ -526,6 +566,7 @@ function AIManager(TaskMangerIn)
 					--	^ To make sure the player is generally in the same building as the npc
 			)
 			then
+				ASuperSurvivor:Speak("ClearTask Section A4")
 				TaskMangerIn:clear()
 				ASuperSurvivor:setBaseBuilding(ASuperSurvivor:getBuilding())
 				TaskMangerIn:AddToTop(BarricadeBuildingTask:new(ASuperSurvivor))
@@ -568,6 +609,7 @@ function AIManager(TaskMangerIn)
 				local group = SSGM:Get(ASuperSurvivor:getGroupID())
 				group:removeMember(ASuperSurvivor:getID())
 			end
+			ASuperSurvivor:Speak("ClearTask Section A5")
 			ASuperSurvivor:getTaskManager():clear()
 			ASuperSurvivor:Speak(getText("ContextMenu_SD_LeaveBCHungry"))
 			ASuperSurvivor:resetAllTables()

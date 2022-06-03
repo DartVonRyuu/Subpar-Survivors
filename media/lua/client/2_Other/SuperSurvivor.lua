@@ -667,6 +667,29 @@ function SuperSurvivor:setSneaking(toValue)
 		self.player:setSneaking(toValue)
 	end
 end
+-- This function is used for AttackTask, so the npc doesn't walk when task is triggered.
+function SuperSurvivor:ManageMoveSpeed()
+	local distance = getDistanceBetween(self.player,victim) / 2 
+	local minrange = self:getMinWeaponRange()
+	
+	-- Movement Management
+	if (getDistanceBetween(self.LastEnemeySeen, self.player) > 2) then
+		self:DebugSay("RUNNING" )
+		self:setRunning(true)
+	end
+	if (getDistanceBetween(self.LastEnemeySeen, self.player) <= 2) and (distance <= minrange) then
+		self:DebugSay("WALKING" )
+		self:setRunning(false)
+	end
+end
+-- This Function is used similar to the running function
+function SuperSurvivor:NpcIsOneMeterFromEntity()	
+	-- Movement Management
+	if (getDistanceBetween(self.LastEnemeySeen, self.player) <= 1) then return true
+		else 
+	return false end
+end
+
 
 function SuperSurvivor:setRunning(toValue)
 
@@ -1284,6 +1307,7 @@ function SuperSurvivor:getDangerSeenCount()
 	return self.dangerSeenCount
 end
 
+-- Added Alt Functions to make things easier to write code in other files
 function SuperSurvivor:isInSameRoom(movingObj)
 	if not movingObj then return false end
 	local objSquare = movingObj:getCurrentSquare()
@@ -1292,6 +1316,15 @@ function SuperSurvivor:isInSameRoom(movingObj)
 	if (not selfSquare) then return false end
 	if(selfSquare:getRoom() == objSquare:getRoom()) then return true
 	else return false end
+end
+function SuperSurvivor:isInSameRoomWithEnemyAlt()
+	if (self.LastEnemeySeen ~= nil) then
+		if (self:isInSameRoom(self.LastEnemeySeen)) then
+			return true
+		else 
+			return false 
+		end
+	end
 end
 
 function SuperSurvivor:isInSameBuilding(movingObj)
@@ -1307,11 +1340,19 @@ function SuperSurvivor:isInSameBuilding(movingObj)
 	
 	return false 
 end
+function SuperSurvivor:isInSameBuildingWithEnemyAlt()
+	if (self.LastEnemeySeen ~= nil) then
+		if (self:isInSameRoom(self.isInSameBuilding)) then
+			return true
+		else 
+			return false 
+		end
+	end
+end
+
 
 function SuperSurvivor:getAttackRange()
-			 
 	return self.AttackRange 
-	
 end
 
 function SuperSurvivor:RealCanSee(character)
@@ -1575,7 +1616,7 @@ function SuperSurvivor:inFrontOfLockedDoorAndIsOutside()
 	end
 end
 
-
+-- Functions to determin Player and NPC locations
 function SuperSurvivor:IsNpcAndPlayerAreOutside() -- If NPC and the real player
 	if (self.player:isOutside()) and (getSpecificPlayer(0):isOutside()) 
 	then
@@ -1608,8 +1649,27 @@ function SuperSurvivor:IsNpcOutsideAndPlayerIsIndoors() -- If NPC and the real p
 		return false
 	end
 end
+function SuperSurvivor:IsNpcOrPlayerOutsideAndOtherInside() -- If NPC and the real player
+	if (self:IsNpcIndoorsAndPlayerIsOutside() or self:IsNpcOutsideAndPlayerIsIndoors()) 
+	then
+		return true
+	else 
+		return false
+	end
+end
 
 
+function SuperSurvivor:CanAttackAlt()
+	if
+		(self.player:getCurrentState() == SwipeStatePlayer.instance()) or
+		(self.player:getModData().felldown) or 
+		(self.player:getModData().hitByCharacter == false)
+	then 
+		return false -- Because NPC shouldn't be able to attack when already hitting, has fallen, or hit by something
+	else
+		return true
+	end
+end
 
 
 
@@ -1695,6 +1755,43 @@ function SuperSurvivor:inFrontOfWindow()
 	
 end
 
+
+-- Warning! Using a :clear() inside a task file is dangerous!
+-- It's a better idea to use the function below this function!
+function SuperSurvivor:ForceAttemptBuildingEntryTask()
+	if (self.TargetBuilding ~= nil) then
+		self:getTaskManager():clear()
+		ASuperSurvivor:Speak("ClearTask Section b1")
+		self:getTaskManager():AddToTop(AttemptEntryIntoBuildingTask:new(self, self.TargetBuilding))
+		self:DebugSay("ForcedAttemptBuildingEntry works!")
+	end
+end
+-- This function is nicer because you no longer have to add in the Target building or the npc self
+-- You can just place in the function and you're good to go.
+function SuperSurvivor:AddToTop_BuildingAttemptTask()
+	if (self.TargetBuilding ~= nil) then
+		self:getTaskManager():AddToTop(AttemptEntryIntoBuildingTask:new(self, self.TargetBuilding))
+		self:DebugSay("ForcedAttemptBuildingEntry works!")
+	end
+end
+function SuperSurvivor:AddToTop_FindUnlootedBuildingTask()
+	self:getTaskManager():AddToTop(FindUnlootedBuildingTask:new(self))
+	self:DebugSay("AddToTop_FindUnlootedBuildingTask works!")
+end
+function SuperSurvivor:AddToTop_BarricadeBuildingTask()
+	self:getTaskManager():AddToTop(BarricadeBuildingTask:new(self))
+	self:DebugSay("AddToTop_BarricadeBuildingTask works!")
+end
+-- This function will only work properly if the NPC is within range of the player (30 squares away)
+function SuperSurvivor:AddToTop_FleeFromHereTask()
+	self:getTaskManager():AddToTop(FleeFromHereTask:new(self,getSpecificPlayer(0):getCurrentSquare()))
+	self:DebugSay("AddToTop_FleeFromHereTask works!")
+end
+-- This function isn't working, It's being hit with a nil
+function SuperSurvivor:AddToTop_LockDoorsTask()
+	self:getTaskManager():AddToTop(LockDoorsTask:new(self,true))
+	self:DebugSay("AddToTop_LockDoorsTask works!")
+end
 
 
 function SuperSurvivor:updateTime()
@@ -1782,7 +1879,8 @@ function SuperSurvivor:NPCgetFootInjurySpeedModifier()
 end
 
 function SuperSurvivor:NPCgetrunSpeedModifier() 
-	local NPCrunSpeedModifier = 1.0;
+--	local NPCrunSpeedModifier = 1.0;
+	local NPCrunSpeedModifier = 0.84;
 	local items = self.player:getWornItems()
 	for i=0, items:size()-1 do
 		local item = items:getItemByIndex(i)
@@ -1953,6 +2051,7 @@ function SuperSurvivor:update()
 		print(self:getName().." Attempt Entry1")
 		self:getTaskManager():clear()
 		self:getTaskManager():AddToTop(AttemptEntryIntoBuildingTask:new(self, self.TargetBuilding))
+		self:AddToTop_FleeFromHereTask()
 		self.TicksSinceSquareChanged = 0
 		self:DebugSay("Cleared Tasks, Trying to enter building again")
 	end
@@ -1974,7 +2073,7 @@ function SuperSurvivor:update()
 		else
 			local xoff = self.player:getX() + ZombRand(-3,3)
 			local yoff = self.player:getY() + ZombRand(-3,3)		
-			self:StopWalk()
+			--self:StopWalk()
 			self:WalkToPoint(xoff,yoff,self.player:getZ())
 			self:Wait(1) -- set 2 to 1
 		end
@@ -2805,14 +2904,15 @@ end
 -- TaskMangerIn:getTask():ForceFinish() Hold this
 
 function SuperSurvivor:Attack(victim)
-	-- test to see if turning off the returnfalse temp fixes attack loops
+	
+	self:Speak("Attacking in "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
 
 	-- Don't use a return False on this IF statement, that causes the if statements below get ignored 
 	-- AtkTicks will start counting down to 0 ONLY if not already attacking, if not 0, or not has fallen on the ground and also not being attacked by player
-	if (self.AtkTicks > 0) and not (self.player:getCurrentState() == SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
+	if (self.AtkTicks > 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
 		self.AtkTicks = self.AtkTicks - 1
 	end 
-
+	
 	-- Fixes a rare scenario where getting to loop attack
 --	if (self.AtkTicks <= 0) and (self.player:getCurrentState() == SwipeStatePlayer.instance()) then 
 --		self.AtkTicks = 3
@@ -2841,16 +2941,11 @@ function SuperSurvivor:Attack(victim)
 		
 		--print(self:getName().."t walking2")
 --		Using updated StopMovement() instead 		
-		if (getDistanceBetween(self.player,victim) > 0.5) then
-			self:StopWalk()
-			self.player:faceThisObject(victim);
-			self.player:NPCSetAiming(false)
-			self.player:NPCSetAttack(false)
-		else
-			self.player:NPCSetAiming(true)
-			self.player:NPCSetAttack(true)
-		end
+		self:StopWalk()
 
+--		self:StopMovement()
+		self.player:faceThisObject(victim);
+		
 		if(self.UsingFullAuto) then self.TriggerHeldDown = true end
 		if(self.player ~= nil) then 
 			-- Distance divides by 2 (half) so there is ABSOLUTELY no way the npc will swing at the air
@@ -2865,19 +2960,26 @@ function SuperSurvivor:Attack(victim)
 			end
 
 			-- Should reset timer when chasing entity, Change ~= to ==
-			if (getDistanceBetween(self.player,victim) > minrange) and (self.AtkTicks < 1) then 
+			if (getDistanceBetween(self.player,victim) > minrange) and (self.AtkTicks < 1) and (self:getTaskManager():getCurrentTask() == "Pursue") then 
 				self.AtkTicks = 1
 			end
 
-		-- Removed the 'shove' machanic, because it's possible for the npc to just spam this move no matter what.as
+			self.player:NPCSetAiming(true)
+			self.player:NPCSetAttack(true)
+	
+-- Removed the 'shove' machanic, because it's possible for the npc to just spam this move no matter what.as
+--			if(distance < minrange) or (self.player:getPrimaryHandItem() == nil) and (self.AtkTicks < 0)  then	
 			if(distance < minrange) and (self.AtkTicks <= 0)  then
-				self:Speak("I hit you! "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
-				victim:Hit(weapon, self.player, damage, false, 1.0, false) -- Line moved to here	
-				self.AtkTicks = self.AtkTicks + 1
-			else
-				self:Speak("I will hit you in "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
-				self.AtkTicks = self.AtkTicks - 1
+				victim:Hit(weapon, self.player, damage, false, 1.0, false) -- Line moved to here			
+--				self:Speak("Shove!"..tostring(distance).."/"..tostring(minrange))
+--				victim:Hit(weapon, self.player, damage, true, 1.0, false)
+--			else
+--				if (self.AtkTicks < 0) then
+--					self:Speak("Attack!"..tostring(distance).."/"..tostring(minrange))
+--					victim:Hit(weapon, self.player, damage, false, 1.0, false)
+--				end
 			end
+			
 		end
 	else
 		local pwep = self.player:getPrimaryHandItem()
@@ -2922,7 +3024,6 @@ function SuperSurvivor:Attack(victim)
 	end
 
 end
-
 function SuperSurvivor:DrinkFromObject(waterObject)
     local playerObj = self.player
 	self:Speak(getText("ContextMenu_SD_Drinking"))

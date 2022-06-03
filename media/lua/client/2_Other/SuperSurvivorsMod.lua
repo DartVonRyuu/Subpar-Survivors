@@ -796,6 +796,7 @@ function supersurvivortemp(keyNum)
 					local member = myGroup:getClosestMember(nil,mySS:Get())
 					if(member) then
 						mySS:Get():Say(getText("ContextMenu_SD_ComeWithMe_Before") .. member:Get():getForname() .. getText("ContextMenu_SD_ComeWithMe_After"))
+						ASuperSurvivor:Speak("ClearTask Section C1")
 						member:getTaskManager():clear()
 						member:getTaskManager():AddToTop(FollowTask:new(member,mySS:Get()))
 					else

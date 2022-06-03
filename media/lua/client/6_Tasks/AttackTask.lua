@@ -53,7 +53,7 @@ function AttackTask:update()
 			--if(self.parent:usingGun()) then self.parent.Reducer = 0 end -- force delay when using gun
 		
 	elseif(self.parent:isWalkingPermitted()) then
-		
+		self.parent:ManageMoveSpeed()
 		local cs = self.parent.LastEnemeySeen:getCurrentSquare()
 		if(instanceof(self.parent.LastEnemeySeen,"IsoPlayer")) then
 		self.parent:walkToDirect(cs)
