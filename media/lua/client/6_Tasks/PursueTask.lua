@@ -61,10 +61,13 @@ function PursueTask:update()
 		self.parent:Speak("I'm not in front of a locked door")
 		-- self.parent:MarkBuildingExplored(self.parent.building)
 	end
-
+	
+	-- 
+	self.parent:ManageMoveSpeed()
+	
 	if(not self:isValid()) or (self:isComplete()) then return false end
 		if(self.parent.player:CanSee(self.Target) == false) then	
-			if(distancetoLastSpotSeen > 2.5) then
+			if(distancetoLastSpotSeen > 1.5) then
 				self.parent:setRunning(true) 						
 				self.parent:walkToDirect(self.LastSquareSeen)
 				if(ZombRand(4) == 0) and (self.parent:isSpeaking() == false) then
