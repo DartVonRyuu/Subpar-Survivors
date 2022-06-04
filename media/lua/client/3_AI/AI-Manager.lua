@@ -89,8 +89,9 @@ function AIManager(TaskMangerIn)
 	end
 
 
-
-	if (
+-- Tips
+-- don't add "Pursue" task to this if list, npcs will get logic looped not to attack
+	if ( 
 		 (ASuperSurvivor:isInSameRoom(ASuperSurvivor.LastEnemeySeen)) and 
 		 (TaskMangerIn:getCurrentTask() ~= "Attack") and 
 		 (TaskMangerIn:getCurrentTask() ~= "Threaten") and 
@@ -115,7 +116,7 @@ function AIManager(TaskMangerIn)
 -- 	 (TaskMangerIn:getCurrentTask() ~= "Pursue"))
 --	 (TaskMangerIn:getCurrentTask() ~= "Attack")
 
-		--ASuperSurvivor:Speak( ASuperSurvivor:getName()..": need to attack")
+		-- Make the hostile npc run up to the player
 		if(ASuperSurvivor.player ~= nil) and (ASuperSurvivor.player:getModData().isRobber) and (not ASuperSurvivor.player:getModData().hitByCharacter) and EnemyIsSurvivor and (not EnemySuperSurvivor.player:getModData().dealBreaker) then 
 			TaskMangerIn:AddToTop(ThreatenTask:new(ASuperSurvivor,EnemySuperSurvivor,"Scram"))
 		else 
@@ -126,10 +127,15 @@ function AIManager(TaskMangerIn)
 					TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
 				else
 					-- If not attack task & entity is NOT close by, then DO run
-					if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) > 1.3) then
+					if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) > 1.3) and (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) < 2.0) then
 						ASuperSurvivor:Speak("Running / attacking task!")
 						TaskMangerIn:AddToTop(PursueTask:new(ASuperSurvivor,ASuperSurvivor.LastEnemeySeen))
-					--	TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
+						-- If entity in question gets too far away, Force new tasks by clearing the tasklist and 'resetting' the loop.
+						if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) >= 2.0) then
+							ASuperSurvivor:getTaskManager():clear()
+							TaskMangerIn:AddToTop(ThreatenTask:new(ASuperSurvivor,EnemySuperSurvivor,"Scram"))
+							TaskMangerIn:AddToTop(PursueTask:new(ASuperSurvivor,ASuperSurvivor.LastEnemeySeen))					
+						end
 					end
 				end
 			end

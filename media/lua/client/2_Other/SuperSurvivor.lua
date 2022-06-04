@@ -2967,7 +2967,7 @@ function SuperSurvivor:NPC_Attack(victim) -- New Function
 	if (weapon ~= nil) then
 		damage = weapon:getMaxDamage();
 	end
-	-- When entity is too far away
+	-- Movement Management
 	if (distance > minrange) then
 		self:getTaskManager():AddToTop(PursueTask:new(self,victim))
 		-- Sprinting Calculation while also checking distance > minrange 
@@ -2976,7 +2976,12 @@ function SuperSurvivor:NPC_Attack(victim) -- New Function
 		else
 			self:setRunning(false)
 		end
+		-- AttackTask movement management
+		if (RealDistance >= minrange + 0.09) then
+			self.WalkingPermitted = true
+		end
 	end
+
 	-- Hitting the entity in question
 	if(distance < minrange) and (self.AtkTicks <= 0)  then
 		victim:Hit(weapon, self.player, damage, false, 1.0, false) -- Line moved to here
