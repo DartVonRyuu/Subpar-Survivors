@@ -8,7 +8,7 @@ SuperSurvivor.__index = SuperSurvivor
 -- Though... One could say npcs are "magically able to see behind them" 
 -- But I think it would be better to have a easier fix of this rather than 
 -- Cheap shotting npcs that are stuck because the player just got behind them.
-SurvivorVisionCone = 1.80
+SurvivorVisionCone = 0.90
 
 function SuperSurvivor:new(isFemale,square)
 	
@@ -668,28 +668,21 @@ function SuperSurvivor:setSneaking(toValue)
 	end
 end
 -- This function is used for AttackTask, so the npc doesn't walk when task is triggered.
+-- This should only be used with the idea of chacing the player.
 function SuperSurvivor:ManageMoveSpeed()
-	local distance = getDistanceBetween(self.player,victim) / 2 
-	local minrange = self:getMinWeaponRange()
-	
-	-- Movement Management
-	if (getDistanceBetween(self.LastEnemeySeen, self.player) > 2) then
-		self:DebugSay("RUNNING" )
-		self:setRunning(true)
-	end
-	if (getDistanceBetween(self.LastEnemeySeen, self.player) <= 2) and (distance <= minrange) then
-		self:DebugSay("WALKING" )
-		self:setRunning(false)
-	end
+	local victim = self.LastEnemeySeen
+		-- Movement Management
+		if (victim ~= nil) then	
+			if (getDistanceBetween(self.player,getSpecificPlayer(0)) > 2) then
+				self:DebugSay("RUNNING" )
+				self:setRunning(true)
+			end
+			if (getDistanceBetween(self.player,getSpecificPlayer(0)) <= 2) then
+				self:DebugSay("WALKING" )
+				self:setRunning(false)
+			end
+		end
 end
--- This Function is used similar to the running function
-function SuperSurvivor:NpcIsOneMeterFromEntity()	
-	-- Movement Management
-	if (getDistanceBetween(self.LastEnemeySeen, self.player) <= 1) then return true
-		else 
-	return false end
-end
-
 
 function SuperSurvivor:setRunning(toValue)
 
@@ -1616,6 +1609,45 @@ function SuperSurvivor:inFrontOfLockedDoorAndIsOutside()
 	end
 end
 
+-- An alt like Function to check for blocked off doors. This will be useful for AttemptEntryIntoBuildingTask
+function SuperSurvivor:Npc_CheckForBlockedDoors()
+
+	local door;
+		local building = self:getBuilding();
+		if(building ~= nil) then 
+			
+			door = getUnlockedDoor(building,self.player)
+			if(not door) then 
+				self:DebugSay("door NOT found") 
+				self.Complete = true
+				return false
+			else 
+				self:DebugSay("door found") 
+			end
+			
+		else 
+			self:DebugSay("building nil") 
+			self.Complete = true
+			return false						
+		end
+		
+		local distance = getDistanceBetween(self.player, getDoorsOutsideSquare(door));
+		if(distance > 4) or (self.player:getZ() ~= door:getZ()) then
+			self:DebugSay("walking to door")
+			self:walkToDirect(getDoorsOutsideSquare(door))				
+		else
+			if(door:isLocked() or door:isLockedByKey() or door:isBarricaded()) then
+				self:DebugSay("Door is blocked")
+				self:walkToDirect(getDoorsOutsideSquare(door))
+			end
+			
+		end
+
+end
+
+
+
+
 -- Functions to determin Player and NPC locations
 function SuperSurvivor:IsNpcAndPlayerAreOutside() -- If NPC and the real player
 	if (self.player:isOutside()) and (getSpecificPlayer(0):isOutside()) 
@@ -2051,7 +2083,7 @@ function SuperSurvivor:update()
 		print(self:getName().." Attempt Entry1")
 		self:getTaskManager():clear()
 		self:getTaskManager():AddToTop(AttemptEntryIntoBuildingTask:new(self, self.TargetBuilding))
-		self:AddToTop_FleeFromHereTask()
+--		self:AddToTop_FleeFromHereTask()
 		self.TicksSinceSquareChanged = 0
 		self:DebugSay("Cleared Tasks, Trying to enter building again")
 	end
@@ -2156,10 +2188,17 @@ end
 function SuperSurvivor:PlayerUpdate()
 
 	if(not self.player:isLocalPlayer()) then
+
+		-- New attack function
+--		if (self.AtkTicks > 0) then
+--			self:getTaskManager():AddToTop(AttackTask:new(self))
+--		end
 	
-		if(self.TriggerHeldDown) then -- simulate automatic weapon fire
-			self:Attack(self.LastEnemeySeen)
-		end
+--		if(self.TriggerHeldDown) then -- simulate automatic weapon fire
+--			if (self.AtkTicks > 0) then
+--				self:Attack(self.LastEnemeySeen)
+--			end
+--		end
 		
 		if(self.player:getLastSquare() ~= nil ) then
 			local cs = self.player:getCurrentSquare()
@@ -2198,19 +2237,24 @@ function SuperSurvivor:WalkToUpdate()
 end
 
 
-
-function SuperSurvivor:StopMovement() -- New Function that ONLY refers to moving around
-	--print(self:getName() .. " StopWalk");
+-- New function to completely stop a npc from moving entirely. Use carefully with good 'if' statements.
+function SuperSurvivor:Npc_StandStill() 
 	self.player:setPath2(nil)
 	self.player:getModData().bWalking = false
 	self.player:getModData().Running = false
 	self:setRunning(false)
 	self.player:setSneaking(false)	
 	self.player:NPCSetJustMoved(false)
+	self.player:NPCSetRunning(false)
+	self.player:setMoving(false) -- Was disabled in stopwalk(), for if things get weird
 end
-
+-- This function should be helpful for combat related actions
+function SuperSurvivor:StopMelee()
+	self.player:NPCSetAttack(false)
+	self.player:NPCSetMelee(false)
+	self.player:NPCSetAiming(false)
+end
 function SuperSurvivor:StopWalk()
-	
 	--print(self:getName() .. " StopWalk");
 	ISTimedActionQueue.clear(self.player)
 	self.player:StopAllActionQueue()
@@ -2231,9 +2275,7 @@ function SuperSurvivor:StopWalk()
 	--self.player:setVariable("bKnockedDown", false)	
 	--self.player:setVariable("AttackAnim", false)
 	--self.player:setVariable("BumpFall", false)
-
 	--self.player:setVariable("IsPerformingAnAction", this::isPerformingAnAction, this::setPerformingAnAction);
-	
 end
 
 function SuperSurvivor:ManageXP()
@@ -2899,36 +2941,62 @@ function SuperSurvivor:getMinWeaponRange()
 end
 
 
--- The location of npc's attacking
--- Brings back  SwipeStatePlayer from un-commented
--- TaskMangerIn:getTask():ForceFinish() Hold this
+-- The new function that will now control NPC attacking. Not perfect, but. Cleaner code, and works better-ish.
+function SuperSurvivor:NPC_Attack(victim) -- New Function 
+	-- Why distance and realdistance? distance uses a subtraction while 'real' doesn't
+	local distance = getDistanceBetween(self.player,victim) - 0.1
+	local RealDistance = getDistanceBetween(self.player,victim)
+	local minrange = self:getMinWeaponRange()
+	local weapon = self.player:getPrimaryHandItem();
+	local damage = 1
+	
+	-- Make sure the entity the NPC is hitting exists
+	if not (instanceof(victim,"IsoPlayer") or instanceof(victim,"IsoZombie")) then return false end
+	
+	-- Makes sure the stances is set
+	self.player:NPCSetAiming(true)
+	self.player:NPCSetAttack(true)
+	self.player:faceThisObject(victim);
+	
+	-- Create the attack cooldown. (once 0, the npc will do the 'attack' then set the time back up by 1, so anti-attack spam method)
+	if (self.AtkTicks > 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and ((not self.player:getModData().felldown)) and (self.player:getModData().hitByCharacter == false) and (getSpecificPlayer(0):getModData().hitByCharacter == false) then
+		self.AtkTicks = self.AtkTicks - 1
+		self:DebugSay("Countdown working")
+	end
+	-- Makes sure if the weapon exists
+	if (weapon ~= nil) then
+		damage = weapon:getMaxDamage();
+	end
+	-- When entity is too far away
+	if (distance > minrange) then
+		self:getTaskManager():AddToTop(PursueTask:new(self,victim))
+		-- Sprinting Calculation while also checking distance > minrange 
+		if (RealDistance >= 1.5) then
+			self:setRunning(true) 
+		else
+			self:setRunning(false)
+		end
+	end
+	-- Hitting the entity in question
+	if(distance < minrange) and (self.AtkTicks <= 0)  then
+		victim:Hit(weapon, self.player, damage, false, 1.0, false) -- Line moved to here
+		getSpecificPlayer(0):getModData().hitByCharacter = false
+		self.AtkTicks = self.AtkTicks + 1
+	end	
+	
+end
 
+-- The older function that was attempted to fix for a week and couldn't. 
+-- Using this function: expect issues
 function SuperSurvivor:Attack(victim)
 	
-	self:Speak("Attacking in "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
+--	self:Speak("Attacking in "..tostring(self.AtkTicks)..(" Range ")..tostring(getDistanceBetween(self.player,victim)))
 
 	-- Don't use a return False on this IF statement, that causes the if statements below get ignored 
 	-- AtkTicks will start counting down to 0 ONLY if not already attacking, if not 0, or not has fallen on the ground and also not being attacked by player
-	if (self.AtkTicks > 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and not (self.player:getModData().felldown) and (self.player:getModData().hitByCharacter == false) then
+	if (self.AtkTicks > 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and ((not self.player:getModData().felldown)) and (self.player:getModData().hitByCharacter == false) and (getSpecificPlayer(0):getModData().hitByCharacter == false) then
 		self.AtkTicks = self.AtkTicks - 1
-	end 
-	
-	-- Fixes a rare scenario where getting to loop attack
---	if (self.AtkTicks <= 0) and (self.player:getCurrentState() == SwipeStatePlayer.instance()) then 
---		self.AtkTicks = 3
---	end
-	
-	if(self.player:getModData().hitByCharacter == true)then
-		self.AtkTicks = 1
-	return false end 
-
-	if(self.player:getCurrentState() == SwipeStatePlayer.instance()) then
-		self.AtkTicks = 1 -- This will MAKE SURE there's a cooldown between attacks
-	return false end 	  -- already attacking wait
-	
-	if(self.player:getModData().felldown) then  -- This will add timer when fallen
-		self.AtkTicks = 1  	-- This number is because recovering from literally falling down
-	return false end  		-- Forces the function to quit and start over because fell down
+	end
 
 	if(self.AtkTicks > 0) then return false end  -- Don't want to attack prior to 0 timer
 
@@ -2938,15 +3006,25 @@ function SuperSurvivor:Attack(victim)
 			ForcePVPOn = true;
 			SurvivorTogglePVP();
 		end
+
+--		self:StopWalk()
+--		self:Npc_StandStill()
+
 		
-		--print(self:getName().."t walking2")
---		Using updated StopMovement() instead 		
 		self:StopWalk()
 
---		self:StopMovement()
-		self.player:faceThisObject(victim);
 		
-		if(self.UsingFullAuto) then self.TriggerHeldDown = true end
+		if (getDistanceBetween(self.player,victim) >= 2) then
+			self:setRunning(true)
+			self:getTaskManager():AddToTop(PursueTask:new(self,victim))
+		else
+			self:setRunning(false)
+		end
+		
+		self.player:faceThisObject(victim);
+		self.TriggerHeldDown = true 
+
+
 		if(self.player ~= nil) then 
 			-- Distance divides by 2 (half) so there is ABSOLUTELY no way the npc will swing at the air
 			local distance = getDistanceBetween(self.player,victim) / 2 
@@ -2961,7 +3039,7 @@ function SuperSurvivor:Attack(victim)
 
 			-- Should reset timer when chasing entity, Change ~= to ==
 			if (getDistanceBetween(self.player,victim) > minrange) and (self.AtkTicks < 1) and (self:getTaskManager():getCurrentTask() == "Pursue") then 
-				self.AtkTicks = 1
+				self.AtkTicks = self.AtkTicks + 1
 			end
 
 			self.player:NPCSetAiming(true)

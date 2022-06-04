@@ -73,11 +73,12 @@ function ThreatenTask:dealComplete()
 end
 
 function ThreatenTask:update()
-	if ((self.parent:inFrontOfGeneralDoorAndIsOutside()) and (self.parent:IsNpcAndPlayerAreOutside())) then 
-		self.Aite:getTaskManager():clear()
-		self.parent:AddToTop_FindUnlootedBuildingTask()
+	if ((self.parent:inFrontOfLockedDoorAndIsOutside()) and (self.parent:IsNpcAndPlayerAreOutside())) then 
+--		self.Aite:getTaskManager():clear()
+--		self.parent:AddToTop_FindUnlootedBuildingTask()
 		self.parent:AddToTop_BuildingAttemptTask()
-		self.parent:AddToTop_FleeFromHereTask()
+--		self.parent:AddToTop_FleeFromHereTask()
+--		self.parent:Npc_CheckForBlockedDoors()
 	return false end
 	
 	if(not self:isValid()) or (self:isComplete()) then return false end

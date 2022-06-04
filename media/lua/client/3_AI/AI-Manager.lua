@@ -121,16 +121,16 @@ function AIManager(TaskMangerIn)
 		else 
 			if (TaskMangerIn:getCurrentTask() ~= "Attack") then
 				-- If not attack task & entity is close by, then don't run
-				if (ASuperSurvivor:NpcIsOneMeterFromEntity()) then
+				if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) <= 1.3) then
 					ASuperSurvivor:Speak("Walking / attacking task!")
 					TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
-					ASuperSurvivor:setRunning(false)
-				end
-				-- If not attack task & entity is NOT close by, then DO run
-				if not (ASuperSurvivor:NpcIsOneMeterFromEntity()) then
-					ASuperSurvivor:Speak("Running / attacking task!")
-					TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
-					ASuperSurvivor:setRunning(true)
+				else
+					-- If not attack task & entity is NOT close by, then DO run
+					if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) > 1.3) then
+						ASuperSurvivor:Speak("Running / attacking task!")
+						TaskMangerIn:AddToTop(PursueTask:new(ASuperSurvivor,ASuperSurvivor.LastEnemeySeen))
+					--	TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
+					end
 				end
 			end
 		end

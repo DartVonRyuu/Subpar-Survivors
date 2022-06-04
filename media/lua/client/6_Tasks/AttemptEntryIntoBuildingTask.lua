@@ -74,6 +74,7 @@ function AttemptEntryIntoBuildingTask:update()
 		self.parent:walkToDirect(outsidesquare)
 		self.Door = nil
 		self.TryWindow = true
+		self.parent:Npc_CheckForBlockedDoors()
 	end
 	if (self.parent:inFrontOfBarricadedWindowAlt()) then 
 		self.parent:Speak("Windows are blocked too! Well, there's no point in staying here...")

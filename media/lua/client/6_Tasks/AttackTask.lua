@@ -18,7 +18,7 @@ end
 
 function AttackTask:isComplete()
 	--self.parent.player:Say( tostring(self.parent:needToFollow()) ..",".. tostring(self.parent:getDangerSeenCount() > 0) ..",".. tostring(self.parent.LastEnemeySeen) ..",".. tostring(not self.parent.LastEnemeySeen:isDead()) ..",".. tostring(self.parent:HasInjury() == false) )
-	if(not self.parent:needToFollow()) and ((self.parent:getDangerSeenCount() > 0) or (self.parent:NpcIsOneMeterFromEntity()) and self.parent:hasWeapon()) and (self.parent.LastEnemeySeen) and not self.parent.LastEnemeySeen:isDead() and (self.parent:HasInjury() == false) then return false
+	if(not self.parent:needToFollow()) and ((self.parent:getDangerSeenCount() > 0) or (getDistanceBetween(self.parent.LastEnemeySeen, self.parent.player) > 0)) and self.parent:hasWeapon() and (self.parent.LastEnemeySeen) and not self.parent.LastEnemeySeen:isDead() and (self.parent:HasInjury() == false) then return false
 	else 
 		self.parent:StopWalk()
 		return true 
@@ -44,7 +44,7 @@ function AttackTask:update()
 			local weapon = self.parent.player:getPrimaryHandItem()
 			if(not weapon or (not self.parent:usingGun()) or ISReloadWeaponAction.canShoot(weapon))  then
 				--print(self.parent:getName().. " can shoot/attack " )
-				self.parent:Attack(self.parent.LastEnemeySeen)
+				self.parent:NPC_Attack(self.parent.LastEnemeySeen)
 			elseif(self.parent:usingGun()) then
 				if(self.parent:ReadyGun(weapon) == false) then self.parent:reEquipMele() end
 				--print(self.parent:getName().. " trying to ready gun" )
