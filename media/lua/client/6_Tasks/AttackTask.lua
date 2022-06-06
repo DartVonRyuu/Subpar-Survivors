@@ -44,7 +44,9 @@ function AttackTask:update()
 			local weapon = self.parent.player:getPrimaryHandItem()
 			if(not weapon or (not self.parent:usingGun()) or ISReloadWeaponAction.canShoot(weapon))  then
 				--print(self.parent:getName().. " can shoot/attack " )
-				self.parent:NPC_Attack(self.parent.LastEnemeySeen)
+				if (self.parent:CanAttackAlt()) then	
+					self.parent:NPC_Attack(self.parent.LastEnemeySeen)
+				end
 			elseif(self.parent:usingGun()) then
 				if(self.parent:ReadyGun(weapon) == false) then self.parent:reEquipMele() end
 				--print(self.parent:getName().. " trying to ready gun" )

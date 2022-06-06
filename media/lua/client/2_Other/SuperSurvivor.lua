@@ -1691,20 +1691,6 @@ function SuperSurvivor:IsNpcOrPlayerOutsideAndOtherInside() -- If NPC and the re
 end
 
 
-function SuperSurvivor:CanAttackAlt()
-	if
-		(self.player:getCurrentState() == SwipeStatePlayer.instance()) or
-		(self.player:getModData().felldown) or 
-		(self.player:getModData().hitByCharacter == false)
-	then 
-		return false -- Because NPC shouldn't be able to attack when already hitting, has fallen, or hit by something
-	else
-		return true
-	end
-end
-
-
-
 -- since inFrontOfWindow (not alt) doesn't have this function's code
 function SuperSurvivor:inFrontOfWindowAlt() 
 
@@ -2114,7 +2100,7 @@ function SuperSurvivor:update()
 	-- Do NOT add this to VisionTicks, It will show easily visible lag
 	self:NPCcalculateWalkSpeed()
 	
-	-- New: 3 tick variable that when hits 0, THEN do vision and taskmanager update. Seems to give better fps 
+	-- New: 1 tick variable that when hits 0, THEN do vision and taskmanager update. Seems to give better fps 
 	-- It's not perfect. SOMETIMES there's delay in attacks due to AtkTicks, but not often. It's better than lag!
 	if (self.VisionTicks > 0) then
 		self:DoVision()
@@ -2940,9 +2926,21 @@ function SuperSurvivor:getMinWeaponRange()
 	return out
 end
 
+-- Function moved, since it's all over here anyways.
+function SuperSurvivor:CanAttackAlt()
+	if
+		(not self.player:getCurrentState() == SwipeStatePlayer.instance()) or 	-- Is in the middle of an attack
+		(not self.player:getModData().felldown)  								-- Has fallen on the ground
+	then 
+		return true 															-- Because NPC shouldn't be able to attack when already hitting, has fallen, or hit by something
+	else
+		return false
+	end
+end
 
 -- The new function that will now control NPC attacking. Not perfect, but. Cleaner code, and works better-ish.
 function SuperSurvivor:NPC_Attack(victim) -- New Function 
+	
 	-- Why distance and realdistance? distance uses a subtraction while 'real' doesn't
 	local distance = getDistanceBetween(self.player,victim) - 0.1
 	local RealDistance = getDistanceBetween(self.player,victim)
@@ -2959,7 +2957,7 @@ function SuperSurvivor:NPC_Attack(victim) -- New Function
 	self.player:faceThisObject(victim);
 	
 	-- Create the attack cooldown. (once 0, the npc will do the 'attack' then set the time back up by 1, so anti-attack spam method)
-	if (self.AtkTicks > 0) and (self.player:getCurrentState() ~= SwipeStatePlayer.instance()) and ((not self.player:getModData().felldown)) and (self.player:getModData().hitByCharacter == false) and (getSpecificPlayer(0):getModData().hitByCharacter == false) then
+	if (self.AtkTicks > 0) and not (self:CanAttackAlt()) then
 		self.AtkTicks = self.AtkTicks - 1
 		self:DebugSay("Countdown working")
 	end
@@ -2983,9 +2981,8 @@ function SuperSurvivor:NPC_Attack(victim) -- New Function
 	end
 
 	-- Hitting the entity in question
-	if(distance < minrange) and (self.AtkTicks <= 0)  then
+	if(distance < minrange) and (self.AtkTicks <= 0) and (self:CanAttackAlt()) then
 		victim:Hit(weapon, self.player, damage, false, 1.0, false) -- Line moved to here
-		getSpecificPlayer(0):getModData().hitByCharacter = false
 		self.AtkTicks = self.AtkTicks + 1
 	end	
 	
