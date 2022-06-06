@@ -675,11 +675,12 @@ function SuperSurvivor:ManageMoveSpeed()
 		if (victim ~= nil) then	
 			if (getDistanceBetween(self.player,getSpecificPlayer(0)) > 2) then
 				self:DebugSay("RUNNING" )
+				self:Npc_StandStill()
 				self:setRunning(true)
 			end
 			if (getDistanceBetween(self.player,getSpecificPlayer(0)) <= 2) then
 				self:DebugSay("WALKING" )
-				self:setRunning(false)
+				self:Npc_StandStill()
 			end
 		end
 end
@@ -996,7 +997,9 @@ end
 function SuperSurvivor:DebugSay(text)
 
 	if(DebugSayEnabled or self.DebugMode) then
-		print(text)
+		print("-----------------------------------------------------")
+		print((os.date ("%c")).." - "..text)
+		print("-----------------------------------------------------")
 		self:Speak(text)
 	end
 end
@@ -1509,6 +1512,7 @@ function SuperSurvivor:walkTo(square)
 		self:WalkToPoint(adjacent:getX(),adjacent:getY(),adjacent:getZ())
 	end
 	--]]
+	if(self.DebugMode) then print(self:getName() .. " WalkTo Function Triggered") end
 end
 
 function SuperSurvivor:walkTowards(x,y,z)
@@ -1519,6 +1523,7 @@ function SuperSurvivor:walkTowards(x,y,z)
 	if(towardsSquare == nil) then return false end
 	
 	self:WalkToPoint(towardsSquare:getX(),towardsSquare:getY(),towardsSquare:getZ())
+	if(self.DebugMode) then print(self:getName() .. " WalkTowards Function Triggered") end
 	
 	
 end
@@ -1543,7 +1548,7 @@ function SuperSurvivor:walkToDirect(square)
 	
 	self:WalkToAttempt(square)
 	self:WalkToPoint(square:getX(),square:getY(),square:getZ())
-	
+	if(self.DebugMode) then print(self:getName() .. " WalkToDirectTriggered") end
 end
 
  
@@ -2232,7 +2237,6 @@ function SuperSurvivor:Npc_StandStill()
 	self.player:setSneaking(false)	
 	self.player:NPCSetJustMoved(false)
 	self.player:NPCSetRunning(false)
-	self.player:setMoving(false) -- Was disabled in stopwalk(), for if things get weird
 end
 -- This function should be helpful for combat related actions
 function SuperSurvivor:StopMelee()
@@ -2957,9 +2961,9 @@ function SuperSurvivor:NPC_Attack(victim) -- New Function
 	self.player:faceThisObject(victim);
 	
 	-- Create the attack cooldown. (once 0, the npc will do the 'attack' then set the time back up by 1, so anti-attack spam method)
-	if (self.AtkTicks > 0) and not (self:CanAttackAlt()) then
+	if (self.AtkTicks > 0) then
 		self.AtkTicks = self.AtkTicks - 1
-		self:DebugSay("Countdown working")
+		self:DebugSay("NPC_Attack Function - Countdown working")
 	end
 	-- Makes sure if the weapon exists
 	if (weapon ~= nil) then

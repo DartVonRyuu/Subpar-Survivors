@@ -244,6 +244,21 @@ function SuperSurvivorPVPHandle(wielder, victim, weapon, damage)
 		end
 	end
 
+
+	-- This should make it where victim (Player/zombie) doesn't get spam attacked
+	if (SSW:AtkTicks > 0) or (SSV:AtkTicks > 0) then
+		fakehit = true
+		victim:setNoDamage(true)
+		victim:setAvoidDamage(true)	
+		wielder:Say("AtkTicks > 0")
+	else
+		fakehit = false
+		victim:setNoDamage(false)
+		victim:setAvoidDamage(false)	
+		wielder:Say("AtkTicks was not <= 0")
+	end
+
+
 	--if victim:getVehicle() ~= nil and victim:getVehicle().frontEndHealth > 3000 then
 	--	fakehit = true
 	--	victim:setNoDamage(true)

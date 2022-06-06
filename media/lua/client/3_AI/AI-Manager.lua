@@ -82,6 +82,7 @@ function AIManager(TaskMangerIn)
 	if (TaskMangerIn:getCurrentTask() == "Pursue") and (ASuperSurvivor:inFrontOfLockedDoor()) and (ASuperSurvivor:Get():isOutside()) then
 			ASuperSurvivor:Speak("ClearTask Section A3")
 			TaskMangerIn:clear()
+			ASuperSurvivor:DebugSay("--------- NPC DEBUG: "..tostring(self.parent:getName()).."AI-MANAGER LUA - If Pursue Task - Clear Task Triggered!")
 		if ((TaskMangerIn:getCurrentTask() == "Enter New Building")) and (ASuperSurvivor:Get():isOutside()) then
 			--	TaskMangerIn:clear()
 			-- SuperSurvivor lua has enter new building task. this If section should ensure it working.
@@ -113,33 +114,46 @@ function AIManager(TaskMangerIn)
 		) and (IHaveInjury == false) 
 	then
 
--- 	 (TaskMangerIn:getCurrentTask() ~= "Pursue"))
+-- 	 (TaskMangerIn:getCurrentTask() ~= "Pursue")
 --	 (TaskMangerIn:getCurrentTask() ~= "Attack")
 
 		-- Make the hostile npc run up to the player
 		if(ASuperSurvivor.player ~= nil) and (ASuperSurvivor.player:getModData().isRobber) and (not ASuperSurvivor.player:getModData().hitByCharacter) and EnemyIsSurvivor and (not EnemySuperSurvivor.player:getModData().dealBreaker) then 
 			TaskMangerIn:AddToTop(ThreatenTask:new(ASuperSurvivor,EnemySuperSurvivor,"Scram"))
-		else 
-			if (TaskMangerIn:getCurrentTask() ~= "Attack") then
-				-- If not attack task & entity is close by, then don't run
-				if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) <= 1.3) then
-					ASuperSurvivor:Speak("Walking / attacking task!")
-					TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
-				else
-					-- If not attack task & entity is NOT close by, then DO run
-					if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) > 1.3) and (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) < 2.0) then
-						ASuperSurvivor:Speak("Running / attacking task!")
-						TaskMangerIn:AddToTop(PursueTask:new(ASuperSurvivor,ASuperSurvivor.LastEnemeySeen))
-						-- If entity in question gets too far away, Force new tasks by clearing the tasklist and 'resetting' the loop.
-						if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) >= 2.0) then
-							ASuperSurvivor:getTaskManager():clear()
-							TaskMangerIn:AddToTop(ThreatenTask:new(ASuperSurvivor,EnemySuperSurvivor,"Scram"))
-							TaskMangerIn:AddToTop(PursueTask:new(ASuperSurvivor,ASuperSurvivor.LastEnemeySeen))					
-						end
-					end
-				end
-			end
+			ASuperSurvivor:DebugSay("--------- NPC DEBUG: "..tostring(ASuperSurvivor:getName())..": AI-MANAGER: AI-TASK CONDITIONS MET, THREATENING PLAYER A0_01")
+		else
+			ASuperSurvivor:DebugSay("--------- NPC DEBUG: "..tostring(ASuperSurvivor:getName())..": AI-MANAGER: AI-TASK CONDITIONS MET, ATTACKING PLAYER A0_02")
+			TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
 		end
+	
+
+--		else 
+--			ASuperSurvivor:DebugSay("--------- NPC DEBUG: "..tostring(ASuperSurvivor:getName())..": AI-MANAGER: AI-TASK CONDITIONS MET, A0_02")
+--			if (TaskMangerIn:getCurrentTask() ~= "Attack") and (TaskMangerIn:getCurrentTask() ~= "Pursue") then
+--				ASuperSurvivor:DebugSay("--------- NPC DEBUG: "..tostring(ASuperSurvivor:getName())..": AI-MANAGER: AI-TASK CONDITIONS MET, A0_03")
+--				-- If not attack task & entity is close by, then don't run
+--				if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) <= 1.3) then
+--					ASuperSurvivor:DebugSay("--------- NPC DEBUG: "..tostring(ASuperSurvivor:getName())..": AI-MANAGER: AI-TASK CONDITIONS MET, A0_04")
+--					ASuperSurvivor:Speak("Walking / attacking task!")
+--					TaskMangerIn:AddToTop(AttackTask:new(ASuperSurvivor)) 
+--				else
+--					ASuperSurvivor:DebugSay("--------- NPC DEBUG: "..tostring(ASuperSurvivor:getName())..": AI-MANAGER: AI-TASK CONDITIONS MET, A0_05")
+--					-- If not attack task & entity is NOT close by, then DO run
+--					if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) > 1.3) and (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) < 2.0) then
+--						ASuperSurvivor:DebugSay("--------- NPC DEBUG: "..tostring(ASuperSurvivor:getName())..": AI-MANAGER: AI-TASK CONDITIONS MET, A0_06")
+--						ASuperSurvivor:Speak("Running / attacking task!")
+--						TaskMangerIn:AddToTop(PursueTask:new(ASuperSurvivor,ASuperSurvivor.LastEnemeySeen))
+--						-- If entity in question gets too far away, Force new tasks by clearing the tasklist and 'resetting' the loop.
+--						if (getDistanceBetween(ASuperSurvivor.LastSurvivorSeen,ASuperSurvivor:Get()) >= 2.0) then
+--							ASuperSurvivor:DebugSay("--------- NPC DEBUG: "..tostring(ASuperSurvivor:getName())..": AI-MANAGER: AI-TASK CONDITIONS MET, A0_07")
+--							ASuperSurvivor:getTaskManager():clear()
+--							TaskMangerIn:AddToTop(ThreatenTask:new(ASuperSurvivor,EnemySuperSurvivor,"Scram"))
+--							TaskMangerIn:AddToTop(PursueTask:new(ASuperSurvivor,ASuperSurvivor.LastEnemeySeen))					
+--						end
+--					end
+--				end
+--			end
+--		end
 	end
 	-- find safe place if injured and enemies near
 	if (TaskMangerIn:getCurrentTask() ~= "Find Building") and (TaskMangerIn:getCurrentTask() ~= "Flee") and (IHaveInjury) and (ASuperSurvivor:getDangerSeenCount() > 0) then

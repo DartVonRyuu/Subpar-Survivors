@@ -1051,6 +1051,7 @@ function SuperSurvivorsExtraSurvivorsManager()
 				
 				-- The PursueTask
 				 raider:getTaskManager():AddToTop(PursueTask:new(raider,mySS:Get()))
+				 raider:DebugSay("--------- NPC DEBUG: "..tostring(self.parent:getName()).."sUPERsURVIVORSMOD.LUA - RAIDER - Adding PursueTask - 2")
 				
 				if(raider:hasWeapon() == false) then raider:giveWeapon(MeleWeapons[ZombRand(1,#MeleWeapons)]) end
 			
@@ -1199,6 +1200,7 @@ function SuperSurvivorsRaiderManager()
 				local name = raider:getName()
 				raider:setName("Raider "..name)
 				raider:getTaskManager():AddToTop(PursueTask:new(raider,mySS:Get()))
+				raider:DebugSay("--------- NPC DEBUG: "..tostring(self.parent:getName()).."sUPERsURVIVORSMOD.LUA - RAIDER - Adding PursueTask - 1")
 				if(raider:hasWeapon() == false) then raider:giveWeapon(MeleWeapons[ZombRand(1,#MeleWeapons)]) end
 			
 				local food, bag

@@ -48,33 +48,38 @@ function PursueTask:isValid()
 end
 
 function PursueTask:update()
+	self.parent:DebugSay("--------- NPC DEBUG: "..tostring(self.parent:getName()).." PursueTask - update Triggered!")
+
 	local distancetoStayAwayZone = getDistanceBetween(self.LastSquareSeen,self.parent.player)
 	local distancetoLastSpotSeen = getDistanceBetween(self.LastSquareSeen,self.parent.player)
 	local theDistance = getDistanceBetween(self.Target, self.parent.player)
 
 -- self.parent:MarkBuildingExplored() and self.parent:inFrontOfLockedDoor() self.parent:MarkBuildingExplored()
-	if (self.TargetSS:getBuilding()~= nil) and (self.parent:inFrontOfLockedDoor()) then
+	if (self.TargetSS:getBuilding()~= nil) and (self.parent:inFrontOfLockedDoorAndIsOutside()) then
+		self.parent:DebugSay("--------- NPC DEBUG: "..tostring(self.parent:getName()).."PursueTask - Update task - If getBuilding isn't Nil and IsInfrontofLockedDoor = true")
+
 --		self.parent:Speak("I'm in front of a locked door")
 		self.parent:MarkBuildingExplored(self.parent:getBuilding())
 		-- Since the tasks switch between this and AttemptEntryIntoBuilding, just make it where if this if statment = true, end it.
 	else
+		self.parent:DebugSay("--------- NPC DEBUG: "..tostring(self.parent:getName()).."PursueTask - Update task - If getBuilding is Nil and IsInfrontofLockedDoor = false")
 		self.parent:Speak("I'm not in front of a locked door")
 		-- self.parent:MarkBuildingExplored(self.parent.building)
 	end
 	
 	-- 
-	self.parent:ManageMoveSpeed()
+	
 	
 	if(not self:isValid()) or (self:isComplete()) then return false end
 		if(self.parent.player:CanSee(self.Target) == false) then	
 			if(distancetoLastSpotSeen > 1.5) then
-				self.parent:setRunning(true) 						
+				self.parent:ManageMoveSpeed()						
 				self.parent:walkToDirect(self.LastSquareSeen)
 				if(ZombRand(4) == 0) and (self.parent:isSpeaking() == false) then
 					self.parent:Speak(getSpeech("SawHimThere"))
 				end
 			else
-				self.parent:setRunning(false)
+				self.parent:ManageMoveSpeed()
 				self.Complete = true
 				self.parent:Speak(getText("ContextMenu_SD_WhereHeGo"))
 			end
